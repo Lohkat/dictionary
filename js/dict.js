@@ -25,6 +25,13 @@ function setup() {
     input_handler(null);
 }
 
+function reset_page()
+{
+    el_search.value = "";
+    show_sections(true);
+    input_handler(null);
+}
+
 function setup_font_toggle() {
     el_font_toggle.addEventListener("click", function() {
         el_html_root.classList.toggle("avali-font");
@@ -43,7 +50,7 @@ function scroll_handler() {
 }
 
 function input_handler(ev) {    
-    const last_result = larinuim_REMOVE_MODS(search.value);
+    const last_result = larinuim_REMOVE_MODS(el_search.value);
     const list = larinuim_FIND_ANY(last_result.l);
 
     if (list.length == 0)
@@ -70,7 +77,7 @@ function input_handler(ev) {
         raw_htm += "</ol></div>";
     }
     
-    if (search.value.length === 0) {
+    if (el_search.value.length === 0) {
         raw_htm += "<div id=\"mark-dictionary\" class=\"lsw-frame_gen\">"+
         "<a href=\"#mark-dictionary\"><h2 class=\"lsw-title\">Dicionário</h2></a>";
     }    
