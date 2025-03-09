@@ -231,7 +231,7 @@ const raw_base_sections =
                     </ol>   
                 </li>
                 <li>
-                    GRANDEZA (opcional):
+                    GRANDEZA (opcional, algumas vezes repetível para ênfase ou multiplicador):
                     <ol type="i" class="lsw-offset_list_mid lsw-no_indent">
                         <li>
                             <span class="lsw-bold">XI</span>: diminutivo;
@@ -258,6 +258,9 @@ const raw_base_sections =
                         <li>
                             <span class="lsw-bold">GA</span>: gerúndio.
                         </li>
+                        <li>
+                            <span class="lsw-bold">LA</span>: particípio.
+                        </li>
                     </ol>   
                 </li>
                 <li>
@@ -269,7 +272,7 @@ const raw_base_sections =
                     </ol>   
                 </li>
                 <li>
-                    GRANDEZA (opcional):
+                    GRANDEZA (opcional, algumas vezes repetível para ênfase ou multiplicador):
                     <ol type="i" class="lsw-offset_list_mid lsw-no_indent">
                         <li>
                             <span class="lsw-bold">XI</span>: diminutivo;
@@ -295,7 +298,7 @@ const raw_base_sections =
     <p>
         <span class="lsw-bold">Pronome</span> no verbo é basicamente o sujeito e 
         <span class="lsw-bold">tempo</span> é o tempo do verbo. Ambos são opcionais e se assemelham muito
-        com o português. Antigamente ainda existia o particípio (<span class="lsw-italic">LA</span>), mas caiu em desuso.
+        com o português.
     </p>
     <p>
         Todas as palavras podem ser "compactadas" se as letras forem as mesmas nos extremos, como em 

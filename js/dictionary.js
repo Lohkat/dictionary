@@ -188,136 +188,138 @@ const __dict_modifiers = [
 
 
 
-const __dict =
+const ___dict =
 [
- {
-  l: "ae",
-  d: [
-   "você",
-   "ele",
-   "sujeito"
-  ],
-  e: [
+{
+    l: "ae",
+    d: [
+    "você",
+    "ele",
+    "sujeito"
+    ],
+    e: [
     ["ae tue gatx","você é bonito"],
     ["ae pod jap", "ele pode voar"]
-  ]
- },
- {
-  l: "ai",
-  d: [
-   "isso",
-   "isto"
-  ],
-  e: [
+    ]
+},
+{
+    l: "ai",
+    d: [
+    "isso",
+    "isto"
+    ],
+    e: [
     ["ai tue topt","isso é divertido"],
     ["maol ai tuepa wafku","então isso foi concluído"]
-  ]
- },
- {
-  l: "as",
-  d: [
-   "vosso",
-   "vossa"
-  ],
-  e: [
+    ]
+},
+{
+    l: "as",
+    d: [
+    "vosso",
+    "vossa"
+    ],
+    e: [
     ["as kjor, ueqne kik","vossa senhoria, desejo dormir"]
-  ]
- },
- {
-  l: "au",
-  d: [
-   "nosso",
-   "nossa"
-  ],
-  e: [
+    ]
+},
+{
+    l: "au",
+    d: [
+    "nosso",
+    "nossa"
+    ],
+    e: [
     ["au brad lol tohd etit","nosso pão de cada dia"]
-  ]
- },
- {
-  l: "av",
-  d: [
-   "seu",
-   "sua",
-   "seus",
-   "suas"
-  ]
- },
- {
-  l: "ea",
-  d: [
-   "seu",
-   "sua"
-  ]
- },
- {
-  l: "es",
-  d: [
-   "teu",
-   "tua"
-  ]
- },
- {
-  l: "eu",
-  d: [
-   "meu",
-   "minha"
-  ]
- },
- {
-  l: "sa",
-  d: [
-   "vós"
-  ]
- },
- {
-  l: "se",
-  d: [
-   "tu"
-  ]
- },
- {
-  l: "ua",
-  d: [
-   "nós"
-  ]
- },
- {
-  l: "ue",
-  d: [
-   "eu"
-  ]
- },
- {
-  l: "va",
-  d: [
-   "eles",
-   "vocês"
-  ]
- },
- {
-  l: "wa",
-  d: [
-   "aquilo"
-  ]
- },
- {
-  l: "abd",
-  d: [
-   "aprender"
-  ]
- },
- {
-  l: "abl",
-  d: [
-   "acontecer",
-   "preparar",
-   "gerar",
-   "produzir",
-   "ajustar",
-   "prontificar",
-   "existir"
-  ]
- },
+    ]
+},
+{
+    l: "av",
+    d: [
+    "seu",
+    "sua",
+    "seus",
+    "suas"
+    ]
+},
+{
+    l: "ea",
+    d: [
+    "seu",
+    "sua"
+    ]
+},
+{
+    l: "es",
+    d: [
+    "teu",
+    "tua"
+    ]
+},
+{
+    l: "eu",
+    d: [
+    "meu",
+    "minha"
+    ]
+},
+{
+    l: "sa",
+    d: [
+    "vós"
+    ]
+},
+{
+    l: "se",
+    d: [
+    "tu"
+    ]
+},
+{
+    l: "ua",
+    d: [
+    "nós"
+    ]
+},
+{
+    l: "ue",
+    d: [
+    "eu"
+    ]
+},
+{
+    l: "va",
+    d: [
+    "eles",
+    "vocês"
+    ]
+},
+{
+    l: "wa",
+    d: [
+    "aquilo"
+    ]
+},
+{
+    l: "abd",
+    d: [
+    "aprender"
+    ]
+},
+{
+    l: "abl",
+    d: [
+    "acontecer",
+    "preparar",
+    "gerar",
+    "produzir",
+    "ajustar",
+    "prontificar",
+    "existir"
+    ]
+},
+// DIVISION OF CONVERTED / NOT CONVERTED
+
  {
   l: "adi",
   d: [
@@ -587,7 +589,8 @@ const __dict =
    "deparar",
    "demarcar",
    "registrar",
-   "pensar"
+   "pensar",
+   "traçar"
   ]
  },
  {
@@ -2225,7 +2228,7 @@ const __dict =
    "membro",
    "participante de um grupo",
    "de uma turma",
-   "conhecido amigável"
+   "conhecido amigável" // !!!
   ]
  },
  {
@@ -3079,21 +3082,10 @@ const __dict =
   ]
  },
  {
+  "discontinued": true,
   l: "gfad",
   d: [
-   "prova",
-   "teste",
-   "registro",
-   "memória",
-   "registro de memória",
-   "anotação",
-   "trilha",
-   "pegadas",
-   "traços",
-   "registro de algum acontecimento",
-   "resposta (final)",
-   "fato inquestionável",
-   "a verdade pura"
+   "utilize => eneku, decku, knep, gaqku, adbku, dapku"
   ]
  },
  {
@@ -3272,13 +3264,10 @@ const __dict =
   ]
  },
  {
+  "discontinued": true,
   l: "gron",
   d: [
-   "teste",
-   "experimento",
-   "experiência",
-   "prova (colocar algo à prova)",
-   "exercício"
+   "utilize => abdku"
   ]
  },
  {
@@ -4425,12 +4414,6 @@ const __dict =
   l: "pofh",
   d: [
    "chute"
-  ]
- },
- {
-  l: "pohl",
-  d: [
-   "frente"
   ]
  },
  {
