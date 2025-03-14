@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br" id="html_root">
+<html lang="pt-br" id="html_root" style="min-width: 900px;">
 <head>
     <META NAME="KEYWORDS" CONTENT="html, css, javascript">
     <meta name="rating" content="general">
@@ -18,7 +18,6 @@
 
     <link rel="stylesheet" href="/deps/css/default.css">
     
-    <script type="text/javascript" src="js/base.js" defer></script>
     <script type="text/javascript" src="js/dict.js" defer></script>
     <script type="text/javascript" src="js/build.js" defer></script>
 </head>
@@ -33,9 +32,6 @@
 
     <div class="lsw-autoflex-up2">
         <input type="text" placeholder="Pesquisar palavras ou significados..." id="search">
-        <!--button class="lsw-btn_default" style="max-width: 200px; min-width: 10px; padding: 0; margin: 0" id="font_toggle">
-                Trocar&nbsp;fonte
-        </button-->
     </div>
 
     <hr class="gray"/>
@@ -47,12 +43,17 @@
                 <div id="wotd">Carregando...</div>            
             </section>
             <section class="lsw-frame_gen" style="width: 50%;">
-                <div class="lsw-center">
+                <div class="lsw-center lsw-title" style="margin-bottom: 0.3em;">
                     <button id="button_random_word" class="lsw-center lsw-btn_default green">Buscar palavra aleatória</button>
                 </div>
                 <div id="insert_random">Clique para buscar!</div>
             </section>
         </div>
+
+        <a href="lore.html" class="lsw-center
+        lsw-btn_default blue" style="width: 100%;">
+                História, regras e informações sobre o idioma, clique aqui!
+        </a>
 
         <hr class="gray"/>
     </div>

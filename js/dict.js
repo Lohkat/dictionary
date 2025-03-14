@@ -241,37 +241,92 @@ const dict = {
     _populate: function() {        
         Object.keys(this.data).forEach(k => {
             const self = dict.data[k];
-            // just to check flag
-//            self["isObsolete"] = function() {
-//                return self.obsolete || false;
-//            };
-//            // check if itself or its variants, old or not, contains or match word
-//            self["hasLike"] = function(word) {
-//                const variants = Object.keys(self["variants"] || {});
-//                const old_variants = Object.keys(self["old_variants"] || {});
-//
-//                const keys = [k, ...variants, ...old_variants];
-//
-//                return keys.some(each => each.indexOf(word) !== -1);
-//            };
-//            // check if itself or its variants, old or not, in any case, is exactly equal to word
-//            self["hasExact"] = function(word) {
-//                const variants = Object.keys(self["variants"] || {});
-//                const old_variants = Object.keys(self["variants"] || {});
-//
-//                const keys = [k, ...variants, ...old_variants];
-//
-//                return keys.some(each => each === word);
-//            };
-//            // check if has part of, or complete of, translation, on current selected lang
-//            self["hasTranslation"] = function(translated) {
-//                const messages = self.message?.[lang_sel] || [];
-//                const old_messages = self.old_message?.[lang_sel] || [];
-//
-//                const all_messages = [...messages, ...old_messages];
-//
-//                return all_messages.some(each => each.indexOf(translated) !== -1);
-//            };
+
+            // Make itself a HTML object
+            self["toHTML"] = function() {
+                const base = document.createElement("div");
+                
+                const title_div = document.createElement("div");
+                const title_head = document.createElement("h2");
+
+                const desc_div = document.createElement("div");
+
+                function create_list_of_array(arr, classes_base) {
+                    if (!arr) return null;
+
+                    const div = document.createElement("div");
+                    
+                    /*const title_head = document.createElement("h3");
+
+                    title_head.innerText = `${title}:`;
+
+                    title_head.classList.add("lsw-bold");
+                    title_head.classList.add("lsw-title");
+                    title_head.classList.add("lsw-inline");*/
+
+                    div.classList.add("lsw-dict-list-messages");
+                    if (classes_base) div.classList.add(...classes_base);
+
+                    //div.appendChild(title_head);
+
+                    arr.forEach((each, idx) => {
+                        const p = document.createElement("p");
+                        const span = document.createElement("span");
+
+                        p.innerText = each;
+                        p.classList.add("lsw-low_indent");
+
+                        span.innerText = `${idx + 1}.`;
+                        span.classList.add("lsw-bold");
+
+                        p.prepend(span);
+                        div.appendChild(p);
+                    });
+
+                    return div;
+                }
+
+                // === TITLE === //
+                title_head.innerText = `${k}:`;
+                title_head.classList.add("lsw-bold");
+                title_head.classList.add("lsw-title");
+                title_head.classList.add("lsw-inline");
+
+                title_div.classList.add("lsw-inline");
+                title_div.classList.add("lsw-arrowed");
+
+                // === Messages === //
+                const message       = create_list_of_array(self.message?.[lang_sel]);
+                const old_message   = create_list_of_array(self.old_message?.[lang_sel], ["lsw-dict-obsolete"]);
+                const variants      = create_list_of_array(self.variants?.message?.[lang_sel]);
+                const old_variants  = create_list_of_array(self.old_variants?.message?.[lang_sel], ["lsw-dict-obsolete"]);
+                const replacements  = create_list_of_array(self.replacements, ["lsw-dict-replacement"]);
+
+                title_div.appendChild(title_head);
+                base.appendChild(title_div);
+
+                if (message && self["obsolete"] !== true) {
+                    if (message) desc_div.appendChild(message);
+                    if (old_message) desc_div.appendChild(old_message);
+                    if (variants) desc_div.appendChild(variants);
+                    if (old_variants) desc_div.appendChild(old_variants);
+                    if (replacements) desc_div.appendChild(replacements);
+                }
+                else {
+                    if (replacements) desc_div.appendChild(replacements);
+                    if (old_message) desc_div.appendChild(old_message);
+                    if (variants) desc_div.appendChild(variants);
+                    if (old_variants) desc_div.appendChild(old_variants);
+                }
+
+
+                desc_div.classList.add("lsw-autoflex-up2");
+
+                base.appendChild(desc_div);
+
+                return base;
+            };
+
             // self check if it is built correctly. Returns string if error, null if nothing wrong
             self["_checkFormat"] = function() {
                 const has_message = self["message"] != null;
@@ -345,7 +400,7 @@ const dict = {
                 }
 
                 return null;
-            }
+            };
         });
 
         // check, for debug
@@ -574,21 +629,7 @@ const dict = {
     GetIndex: function(idx) {
         const keys = Object.keys(this.data);
         if (idx < 0 || idx >= keys.length) return null;
-        return null;/*{
-            larinuim: {
-                perfect_match: true/false
-                cases: {
-                    "WORD": [
-                        "messages",
-                        ...
-                    ],
-                    ...
-                }
-
-            }this.data[keys[idx]],
-            translated: null,
-            key: keys[idx]
-        };*/
+        return this.data[keys[idx]];
     },
     
 

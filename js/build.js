@@ -29,6 +29,22 @@ function _load_wotd_and_random_word_search()
 {
     const wotd_el = document.getElementById("wotd");
     const random_btn_el = document.getElementById("button_random_word");
+    const insert_random_el = document.getElementById("insert_random");
+
+    const day_code = ((new Date()).getDate() * 864512) % dict.GetLength();
+    const obj = dict.GetIndex(day_code);
+
+    wotd_el.innerHTML = "";
+    wotd_el.appendChild(obj.toHTML());
+
+    random_btn_el.addEventListener("click", function(ev) {
+        const random_index = Math.floor(Math.random() * dict.GetLength());
+        const obj = dict.GetIndex(random_index);
+
+        insert_random_el.innerHTML = "";
+        insert_random_el.appendChild(obj.toHTML());
+    });
+
 }
 
 
