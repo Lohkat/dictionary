@@ -14,14 +14,13 @@
 
     <link rel="icon" type="image/x-icon" href="images/favicon.png">
     
-    <title>Larinuim</title>
+    <title>Larinuim Dictionary</title>
 
     <link rel="stylesheet" href="/deps/css/default.css">
     
-    <script type="text/javascript" src="js/base_sections.js" defer></script>
-    <script type="text/javascript" src="js/dictionary.js" defer></script>
-
+    <script type="text/javascript" src="js/base.js" defer></script>
     <script type="text/javascript" src="js/dict.js" defer></script>
+    <script type="text/javascript" src="js/build.js" defer></script>
 </head>
 <body class="lsw-font-hidden">
     <div class="lsw-center">
@@ -34,21 +33,34 @@
 
     <div class="lsw-autoflex-up2">
         <input type="text" placeholder="Pesquisar palavras ou significados..." id="search">
-        <button class="lsw-btn_default" style="max-width: 200px; min-width: 10px; padding: 0; margin: 0" id="font_toggle">
+        <!--button class="lsw-btn_default" style="max-width: 200px; min-width: 10px; padding: 0; margin: 0" id="font_toggle">
                 Trocar&nbsp;fonte
-        </button>
+        </button-->
     </div>
 
     <hr class="gray"/>
 
-    <div id="static-sections">       
-             
+    <div id="hide_on_search">
+        <div style="display: flex; gap: 20px;">
+            <section class="lsw-frame_gen" style="width: 50%;">
+                <h2 class="lsw-title">Palavra do dia:</h2>
+                <div id="wotd">Carregando...</div>            
+            </section>
+            <section class="lsw-frame_gen" style="width: 50%;">
+                <div class="lsw-center">
+                    <button id="button_random_word" class="lsw-center lsw-btn_default green">Buscar palavra aleatória</button>
+                </div>
+                <div id="insert_random">Clique para buscar!</div>
+            </section>
+        </div>
+
+        <hr class="gray"/>
     </div>
 
-    <div id="search_result">  
+    <main id="main">  
         Carregando...
     </div>
         
-    <p class="lsw-right_text">Site by Lohk, 2024</p>
+    <p class="lsw-right_text">Site by Lohk, 2025, v2</p>
 </body>
 </html>
