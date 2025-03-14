@@ -276,7 +276,7 @@ const dict = {
                         p.innerText = each;
                         p.classList.add("lsw-low_indent");
 
-                        span.innerText = `${idx + 1}.`;
+                        span.innerText = `${idx + 1}. `;
                         span.classList.add("lsw-bold");
 
                         p.prepend(span);
@@ -291,6 +291,7 @@ const dict = {
                 title_head.classList.add("lsw-bold");
                 title_head.classList.add("lsw-title");
                 title_head.classList.add("lsw-inline");
+                if (self.obsolete === true) title_head.classList.add("lsw-dict-obsolete");
 
                 title_div.classList.add("lsw-inline");
                 title_div.classList.add("lsw-arrowed");
@@ -320,7 +321,7 @@ const dict = {
                 }
 
 
-                desc_div.classList.add("lsw-autoflex-up2");
+                desc_div.classList.add("lsw-autoflex-up3");
 
                 base.appendChild(desc_div);
 
