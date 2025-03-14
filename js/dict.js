@@ -469,13 +469,13 @@ const dict = {
     */
     _SearchLarinuim: function(word) {
         const res = {
-            perfect_matches: null,
-            cases: {}
+            perfect_matches: [],
+            cases: []
         };
 
         const deconstructed_word = affixes.DeconstructWord(word);
 
-        const base_names = Object.keys(this.data).map(function(k){ return {key: k, src: dict.data[k], old_or_replacement: false} });
+        const base_names = Object.keys(this.data).map(function(k){ return {key: k, src: {[k]: dict.data[k]}, old_or_replacement: false} });
         const variants = [];
         const old_variants = [];
         const replacements = [];
@@ -483,15 +483,15 @@ const dict = {
         Object.keys(this.data).forEach(k => {
             const o = dict.data[k];
             if (o["variants"]) {
-                const tmp = Object.keys(o.variants).map(function(k){ return {key: k, src: o, old_or_replacement: false} });
+                const tmp = Object.keys(o.variants).map(function(k){ return {key: k, src: {[k]: o}, old_or_replacement: false} });
                 variants.push(...tmp);
             }
             if (o["old_variants"]) {
-                const tmp = Object.keys(o.old_variants).map(function(k){ return {key: k, src: o, old_or_replacement: true }})
+                const tmp = Object.keys(o.old_variants).map(function(k){ return {key: k, src: {[k]: o}, old_or_replacement: true }})
                 old_variants.push(...tmp);
             }
             if (o["replacements"]) {
-                const tmp = Object.keys(o.replacements).map(function(k){ return {key: k, src: o, old_or_replacement: true} })
+                const tmp = Object.keys(o.replacements).map(function(k){ return {key: k, src: {[k]: o}, old_or_replacement: true} })
                 replacements.push(...tmp);
             }
         });
@@ -502,8 +502,6 @@ const dict = {
         const found_replacements = replacements.filter(each => each.key.indexOf(deconstructed_word.base) !== -1);
 
         const found = [...found_base, ...found_variants, ...found_old_variants, ...found_replacements];
-
-        console.log(`base: ${found_base.length}; variants: ${found_variants.length}; old_variants: ${found_old_variants.length}`);
 
         if (found.length === 0) return res;
 
@@ -536,8 +534,8 @@ const dict = {
     */
     _SearchTranslated: function(message) {
         const res = {
-            perfect_matches: null,
-            cases: {}
+            perfect_matches: [],
+            cases: []
         };
 
         const found = [];
@@ -545,8 +543,8 @@ const dict = {
         Object.keys(this.data).forEach(k => {
             const self = dict.data[k];
 
-            const self_messages = self.message?.[lang_sel]?.filter(msg => msg.indexOf(message) !== -1).flatMap(function(msg){ return {key: msg, src: self, old_or_replacement: false }; }) || [];
-            const self_old_messages = self.old_message?.[lang_sel].filter(msg => msg.indexOf(message) !== -1).flatMap(function(msg){ return {key: msg, src: self, old_or_replacement: true }; }) || [];
+            const self_messages = self.message?.[lang_sel]?.filter(msg => msg.indexOf(message) !== -1).flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: false }; }) || [];
+            const self_old_messages = self.old_message?.[lang_sel].filter(msg => msg.indexOf(message) !== -1).flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: true }; }) || [];
 
             if (self_messages.length) found.push(...self_messages);
             if (self_old_messages.length) found.push(...self_old_messages);
@@ -558,43 +556,14 @@ const dict = {
         return res;
     },
 
-    /*
-    Returns object like
-    {
-        "WORD": [
-            "messages",
-            ...
-        ],
-        ...
-    }
-    */
-//    _SearchTranslated: function(message) {
-//        const results = {};
-//
-//        for (const key in this.data) {
-//            const obj = this.data[key];
-//            const brArray = obj.message?.[lang_sel] || [];
-//            const brOldArray = obj.old_message?.[lang_sel] || [];
-//            const variantBrArrays = Object.values(obj.variants || {}).flatMap(variant => variant.message?.[lang_sel] || []);
-//            const variantBrOldArrays = Object.values(obj.old_variants || {}).flatMap(variant => variant.message?.[lang_sel] || []);
-//
-//            const allBrValues = [...brArray, ...brOldArray, ...variantBrArrays, ...variantBrOldArrays];
-//
-//            if (allBrValues.some(value => value.includes(message))) {
-//                results[key] = obj;
-//            }
-//        }
-//
-//        return results;
-//    },
-
+    // Combines Larinuim and Translated results in one
     Search: function(word) {
         const larinuim = this._SearchLarinuim(word);
         const translated = this._SearchTranslated(word);
 
         return {
-            larinuim: larinuim.found || {},
-            translated: translated
+            perfect_matches: [...larinuim.perfect_matches, ...translated.perfect_matches],
+            cases: [...larinuim.cases, ...translated.cases]
         };
     },
 
