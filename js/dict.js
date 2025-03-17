@@ -233,7 +233,7 @@ WORD: {
 }
 */
 
-
+let __tst = null;
 
 const dict = {
 
@@ -244,30 +244,16 @@ const dict = {
 
             // Make itself a HTML object
             self["toHTML"] = function() {
-                const base = document.createElement("div");
-                
-                const title_div = document.createElement("div");
-                const title_head = document.createElement("h2");
-
-                const desc_div = document.createElement("div");
-
-                function create_list_of_array(arr, classes_base) {
+                function create_list_of_array(arr, classes_base, id, show) {
                     if (!arr) return null;
 
                     const div = document.createElement("div");
-                    
-                    /*const title_head = document.createElement("h3");
-
-                    title_head.innerText = `${title}:`;
-
-                    title_head.classList.add("lsw-bold");
-                    title_head.classList.add("lsw-title");
-                    title_head.classList.add("lsw-inline");*/
 
                     div.classList.add("lsw-dict-list-messages");
                     if (classes_base) div.classList.add(...classes_base);
+                    if (id) div.setAttribute("id", id);
 
-                    //div.appendChild(title_head);
+                    if (show === false) div.classList.add("lsw-hide");
 
                     arr.forEach((each, idx) => {
                         const p = document.createElement("p");
@@ -285,47 +271,149 @@ const dict = {
 
                     return div;
                 }
+                function create_button_enabler(resume, text, target_id_to_toggle_with, disabled, selected) {
+                    const el = document.createElement("button");
+                    
+                    el.classList.add("lsw-btn_default");
+                    el.classList.add("bar_selector");
+
+                    if (disabled === true) el.classList.add("disabled");
+                    if (selected === true) el.classList.add("selected");
+
+                    el.setAttribute("text", text);
+                    el.setAttribute("resumed-text", resume);
+                    el.setAttribute("id-target", target_id_to_toggle_with);
+
+                    el.addEventListener("click", function(ev) {
+                        const src = ev.target;
+
+                        if (src.classList.contains("disabled")) return;
+
+                        const target_id = src.getAttribute("id-target");
+                        const target_el = document.getElementById(target_id);
+                        if (!target_el) {
+                            console.log(`Fatal error: element not found: ${target_id}`);
+                            return;
+                        }
+
+                        const other_buttons = src.parentElement.children;
+                        for (let i = 0; i < other_buttons.length; ++i) {
+                            other_buttons[i].classList.remove("selected");
+                        }
+                        const other_transl = target_el.parentElement.children;
+                        for (let i = 0; i < other_transl.length; ++i) {
+                            other_transl[i].classList.add("lsw-hide");
+                        }
+                        target_el.classList.remove("lsw-hide");
+
+                        src.classList.add("selected");
+
+                        __tst = src;
+                    });
+                    
+                    //el.innerText = "...";
+                    return el;
+                }
+
+                const not_obsolete = (self.message?.[lang_sel]?.length > 0 && !self.obsolete);
+
+                const base = document.createElement("div");                
+
+                const message       = create_list_of_array(self.message?.[lang_sel],                                                    null,                       `G-${k}-msg`,   not_obsolete);
+                const old_message   = create_list_of_array(self.old_message?.[lang_sel],                                                ["lsw-dict-obsolete"],      `G-${k}-omsg`,  false);
+                const variants      = create_list_of_array(Object.values(self.variants || {}).flatMap(e => e.message?.[lang_sel]),      null,                       `G-${k}-var`,   false);
+                const old_variants  = create_list_of_array(Object.values(self.old_variants || {}).flatMap(e => e.message?.[lang_sel]),  ["lsw-dict-obsolete"],      `G-${k}-ovar`,  false);
+                const replacements  = create_list_of_array(self.replacements,                                                           ["lsw-dict-replacement"],   `G-${k}-repl`,  !not_obsolete);
 
                 // === TITLE === //
+                const title_div = document.createElement("div");
+                const title_head = document.createElement("h2");
+
                 title_head.innerText = `${k}:`;
                 title_head.classList.add("lsw-bold");
                 title_head.classList.add("lsw-title");
                 title_head.classList.add("lsw-inline");
-                if (self.obsolete === true) title_head.classList.add("lsw-dict-obsolete");
+                if (self.obsolete === true) {
+                    title_head.classList.add("lsw-dict-obsolete");
+                    title_head.setAttribute("title", "Obsoleto. Verifique por alternativas.");
+                }
 
                 title_div.classList.add("lsw-inline");
                 title_div.classList.add("lsw-arrowed");
-
-                // === Messages === //
-                const message       = create_list_of_array(self.message?.[lang_sel]);
-                const old_message   = create_list_of_array(self.old_message?.[lang_sel], ["lsw-dict-obsolete"]);
-                const variants      = create_list_of_array(self.variants?.message?.[lang_sel]);
-                const old_variants  = create_list_of_array(self.old_variants?.message?.[lang_sel], ["lsw-dict-obsolete"]);
-                const replacements  = create_list_of_array(self.replacements, ["lsw-dict-replacement"]);
-
                 title_div.appendChild(title_head);
+
+                // === SELECTOR === //
+                const div_selector = document.createElement("div");
+                div_selector.style.display = "flex";
+
+                div_selector.appendChild(create_button_enabler("📗", "Traduções",                       `G-${k}-msg`,  message == null,          not_obsolete));
+                div_selector.appendChild(create_button_enabler("📕", "Traduções obsoletas",             `G-${k}-omsg`, old_message == null,      false));
+                div_selector.appendChild(create_button_enabler("🌟", "Variações",                       `G-${k}-var`,  self.variants == null,    false));
+                div_selector.appendChild(create_button_enabler("⭐", "Variações obsoletas",             `G-${k}-ovar`, self.old_variants == null,false));
+                div_selector.appendChild(create_button_enabler("🔄", "Substituído por",                 `G-${k}-repl`, replacements == null,     !not_obsolete));
+                
+                // === MEANINGS === //
+                const desc_div = document.createElement("div");
+
+                if (message)                    desc_div.appendChild(message);
+                if (old_message)                desc_div.appendChild(old_message);
+                if (self.variants != null)      desc_div.appendChild(variants);
+                if (self.old_variants != null)  desc_div.appendChild(old_variants);
+                if (replacements)               desc_div.appendChild(replacements);
+
                 base.appendChild(title_div);
-
-                if (message && self["obsolete"] !== true) {
-                    if (message) desc_div.appendChild(message);
-                    if (old_message) desc_div.appendChild(old_message);
-                    if (variants) desc_div.appendChild(variants);
-                    if (old_variants) desc_div.appendChild(old_variants);
-                    if (replacements) desc_div.appendChild(replacements);
-                }
-                else {
-                    if (replacements) desc_div.appendChild(replacements);
-                    if (old_message) desc_div.appendChild(old_message);
-                    if (variants) desc_div.appendChild(variants);
-                    if (old_variants) desc_div.appendChild(old_variants);
-                }
-
-
-                desc_div.classList.add("lsw-autoflex-up3");
-
+                base.appendChild(div_selector);
                 base.appendChild(desc_div);
 
                 return base;
+
+//                const base = document.createElement("div");
+//                
+//                const title_div = document.createElement("div");
+//                const title_head = document.createElement("h2");
+//
+//                const desc_div = document.createElement("div");
+//
+//                // === TITLE === //
+//                title_head.innerText = `${k}:`;
+//                title_head.classList.add("lsw-bold");
+//                title_head.classList.add("lsw-title");
+//                title_head.classList.add("lsw-inline");
+//                if (self.obsolete === true) title_head.classList.add("lsw-dict-obsolete");
+//
+//                title_div.classList.add("lsw-inline");
+//                title_div.classList.add("lsw-arrowed");
+//
+//                // === Messages === //
+//                const message       = create_list_of_array(self.message?.[lang_sel]);
+//                const old_message   = create_list_of_array(self.old_message?.[lang_sel], ["lsw-dict-obsolete"]);
+//                const variants      = create_list_of_array(self.variants?.message?.[lang_sel]);
+//                const old_variants  = create_list_of_array(self.old_variants?.message?.[lang_sel], ["lsw-dict-obsolete"]);
+//                const replacements  = create_list_of_array(self.replacements, ["lsw-dict-replacement"]);
+//
+//                title_div.appendChild(title_head);
+//                base.appendChild(title_div);
+//
+//                if (message && self["obsolete"] !== true) {
+//                    if (message) desc_div.appendChild(message);
+//                    if (old_message) desc_div.appendChild(old_message);
+//                    if (variants) desc_div.appendChild(variants);
+//                    if (old_variants) desc_div.appendChild(old_variants);
+//                    if (replacements) desc_div.appendChild(replacements);
+//                }
+//                else {
+//                    if (replacements) desc_div.appendChild(replacements);
+//                    if (old_message) desc_div.appendChild(old_message);
+//                    if (variants) desc_div.appendChild(variants);
+//                    if (old_variants) desc_div.appendChild(old_variants);
+//                }
+//
+//
+//                desc_div.classList.add("lsw-autoflex-up3");
+//
+//                base.appendChild(desc_div);
+//
+//                return base;
             };
 
             // self check if it is built correctly. Returns string if error, null if nothing wrong
