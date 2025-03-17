@@ -118,7 +118,7 @@ const affixes = {
 
 
     DeconstructWord: function(word) {
-        if (!word || typeof word !== "string") return null;
+        if (typeof word !== "string") return null;
         
         const ret = {
             success: false, // if it got to the base length, 3 or 4, this is true
@@ -243,7 +243,7 @@ const dict = {
             const self = dict.data[k];
 
             // Make itself a HTML object
-            self["toHTML"] = function() {
+            self["toHTML"] = function(title_search_append) {
                 function create_list_of_array(arr, classes_base, id, show) {
                     if (!arr) return null;
 
@@ -329,7 +329,7 @@ const dict = {
                 const title_div = document.createElement("div");
                 const title_head = document.createElement("h2");
 
-                title_head.innerText = `${k}:`;
+                title_head.innerText = title_search_append && title_search_append !== k ? `${k} - encontrado como '${title_search_append}':` : `${k}:`;
                 title_head.classList.add("lsw-bold");
                 title_head.classList.add("lsw-title");
                 title_head.classList.add("lsw-inline");
@@ -366,54 +366,6 @@ const dict = {
                 base.appendChild(desc_div);
 
                 return base;
-
-//                const base = document.createElement("div");
-//                
-//                const title_div = document.createElement("div");
-//                const title_head = document.createElement("h2");
-//
-//                const desc_div = document.createElement("div");
-//
-//                // === TITLE === //
-//                title_head.innerText = `${k}:`;
-//                title_head.classList.add("lsw-bold");
-//                title_head.classList.add("lsw-title");
-//                title_head.classList.add("lsw-inline");
-//                if (self.obsolete === true) title_head.classList.add("lsw-dict-obsolete");
-//
-//                title_div.classList.add("lsw-inline");
-//                title_div.classList.add("lsw-arrowed");
-//
-//                // === Messages === //
-//                const message       = create_list_of_array(self.message?.[lang_sel]);
-//                const old_message   = create_list_of_array(self.old_message?.[lang_sel], ["lsw-dict-obsolete"]);
-//                const variants      = create_list_of_array(self.variants?.message?.[lang_sel]);
-//                const old_variants  = create_list_of_array(self.old_variants?.message?.[lang_sel], ["lsw-dict-obsolete"]);
-//                const replacements  = create_list_of_array(self.replacements, ["lsw-dict-replacement"]);
-//
-//                title_div.appendChild(title_head);
-//                base.appendChild(title_div);
-//
-//                if (message && self["obsolete"] !== true) {
-//                    if (message) desc_div.appendChild(message);
-//                    if (old_message) desc_div.appendChild(old_message);
-//                    if (variants) desc_div.appendChild(variants);
-//                    if (old_variants) desc_div.appendChild(old_variants);
-//                    if (replacements) desc_div.appendChild(replacements);
-//                }
-//                else {
-//                    if (replacements) desc_div.appendChild(replacements);
-//                    if (old_message) desc_div.appendChild(old_message);
-//                    if (variants) desc_div.appendChild(variants);
-//                    if (old_variants) desc_div.appendChild(old_variants);
-//                }
-//
-//
-//                desc_div.classList.add("lsw-autoflex-up3");
-//
-//                base.appendChild(desc_div);
-//
-//                return base;
             };
 
             // self check if it is built correctly. Returns string if error, null if nothing wrong
@@ -601,7 +553,7 @@ const dict = {
             },
             ...
         ]
-        cases: [
+        other_cases: [
             {
                 key: "MATCHED KEY",
                 old_or_replacement: true/false,
@@ -614,7 +566,7 @@ const dict = {
     _SearchLarinuim: function(word) {
         const res = {
             perfect_matches: [],
-            cases: []
+            other_cases: []
         };
 
         const deconstructed_word = affixes.DeconstructWord(word);
@@ -645,12 +597,12 @@ const dict = {
         const found_old_variants = old_variants.filter(each => each.key.indexOf(deconstructed_word.base) !== -1);
         const found_replacements = replacements.filter(each => each.key.indexOf(deconstructed_word.base) !== -1);
 
-        const found = [...found_base, ...found_variants, ...found_old_variants, ...found_replacements];
+        const found = [...new Map([...found_base, ...found_variants, ...found_old_variants, ...found_replacements].map(item => [item.key, item])).values()];
 
         if (found.length === 0) return res;
 
         res.perfect_matches = found.filter(each => !each.old_or_replacement && each.key === word);
-        res.cases = found;
+        res.other_cases = found.filter(each => each.old_or_replacement || each.key !== word);
         
         return res;
     },
@@ -666,7 +618,7 @@ const dict = {
             },
             ...
         ]
-        cases: [
+        other_cases: [
             {
                 key: "MATCHED STRING TRANSLATION",
                 old_or_replacement: true/false,
@@ -679,10 +631,10 @@ const dict = {
     _SearchTranslated: function(message) {
         const res = {
             perfect_matches: [],
-            cases: []
+            other_cases: []
         };
 
-        const found = [];
+        const found_raw = [];
 
         Object.keys(this.data).forEach(k => {
             const self = dict.data[k];
@@ -690,24 +642,40 @@ const dict = {
             const self_messages = self.message?.[lang_sel]?.filter(msg => msg.indexOf(message) !== -1).flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: false }; }) || [];
             const self_old_messages = self.old_message?.[lang_sel].filter(msg => msg.indexOf(message) !== -1).flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: true }; }) || [];
 
-            if (self_messages.length) found.push(...self_messages);
-            if (self_old_messages.length) found.push(...self_old_messages);
+            if (self_messages.length) found_raw.push(...self_messages);
+            if (self_old_messages.length) found_raw.push(...self_old_messages);
         });
 
+        const found = [...new Map([...found_raw].map(item => [item.key, item])).values()];
+
         res.perfect_matches = found.filter(each => !each.old_or_replacement && each.key === message);
-        res.cases = found;
+        res.other_cases = found.filter(each => each.old_or_replacement || each.key !== message);
 
         return res;
     },
 
     // Combines Larinuim and Translated results in one
     Search: function(word) {
+        if (!word || word == null) {
+            return {
+                perfect_matches: [],
+                other_cases: Object.keys(dict.data).flatMap(function(k){ return {key: k, src: {[k]: dict.data[k]}, old_or_replacement: dict.data[k].obsolete ? true : false}})
+            };
+        }
+
         const larinuim = this._SearchLarinuim(word);
         const translated = this._SearchTranslated(word);
 
+        console.log(larinuim);
+        console.log(translated);
+
+        const perfect_matches = [...new Map([...larinuim.perfect_matches, ...translated.perfect_matches].map(item => [item.key, item])).values()];
+        const other_cases = [...new Map([...larinuim.other_cases, ...translated.other_cases].map(item => [item.key, item])).values()];
+
+
         return {
-            perfect_matches: [...larinuim.perfect_matches, ...translated.perfect_matches],
-            cases: [...larinuim.cases, ...translated.cases]
+            perfect_matches: perfect_matches,
+            other_cases: other_cases
         };
     },
 
