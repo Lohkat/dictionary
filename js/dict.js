@@ -238,15 +238,17 @@ let __tst = null;
 const dict = {
 
     // populate data objects with functions
-    _populate: function() {        
+    _populate: function() {  
+        let fancy_id_counter = 0; // to make unique ids "unique-er"
         Object.keys(this.data).forEach(k => {
             const self = dict.data[k];
 
             // Make itself a HTML object
             self["toHTML"] = function(title_search_append) {
                 function create_list_of_array(arr, classes_base, id, show) {
-                    if (!arr) return null;
-
+                    if (!arr || arr.length <= 0) return null;
+                    if (arr.length === 1 && arr[0].val == null) return null;
+                    
                     const div = document.createElement("div");
 
                     div.classList.add("lsw-dict-list-messages");
@@ -254,20 +256,33 @@ const dict = {
                     if (id) div.setAttribute("id", id);
 
                     if (show === false) div.classList.add("lsw-hide");
+                    
+                    arr.forEach(e => {
+                        if (e.key) {
+                            const sub_title = document.createElement("h3");
 
-                    arr.forEach((each, idx) => {
-                        const p = document.createElement("p");
-                        const span = document.createElement("span");
+                            sub_title.className = "lsw-bold lsw-inline lsw-dict-subtitle lsw-arrowed2";
+                            sub_title.innerText = `${e.key}:`;
 
-                        p.innerText = each;
-                        p.classList.add("lsw-low_indent");
+                            div.appendChild(sub_title);
+                        }
 
-                        span.innerText = `${idx + 1}. `;
-                        span.classList.add("lsw-bold");
-
-                        p.prepend(span);
-                        div.appendChild(p);
+                        e.val?.forEach((each, idx) => {
+                            const p = document.createElement("p");
+                            const span = document.createElement("span");
+    
+                            p.innerText = each;
+                            p.classList.add("lsw-low_indent");
+    
+                            span.innerText = `${idx + 1}. `;
+                            span.classList.add("lsw-bold");
+    
+                            p.prepend(span);
+                            div.appendChild(p);
+                        });
                     });
+
+                    
 
                     return div;
                 }
@@ -319,11 +334,52 @@ const dict = {
 
                 const base = document.createElement("div");                
 
-                const message       = create_list_of_array(self.message?.[lang_sel],                                                    null,                       `G-${k}-msg`,   not_obsolete);
-                const old_message   = create_list_of_array(self.old_message?.[lang_sel],                                                ["lsw-dict-obsolete"],      `G-${k}-omsg`,  false);
-                const variants      = create_list_of_array(Object.values(self.variants || {}).flatMap(e => e.message?.[lang_sel]),      null,                       `G-${k}-var`,   false);
-                const old_variants  = create_list_of_array(Object.values(self.old_variants || {}).flatMap(e => e.message?.[lang_sel]),  ["lsw-dict-obsolete"],      `G-${k}-ovar`,  false);
-                const replacements  = create_list_of_array(self.replacements,                                                           ["lsw-dict-replacement"],   `G-${k}-repl`,  !not_obsolete);
+                // key: if different, defined
+                // val: meanings of key
+
+                const message_id        = `G-${k}-msg-${fancy_id_counter++}`;
+                const old_message_id    = `G-${k}-omsg-${fancy_id_counter++}`;
+                const variants_id       = `G-${k}-var-${fancy_id_counter++}`;
+                const old_variants_id   = `G-${k}-ovar-${fancy_id_counter++}`;
+                const replacements_id   = `G-${k}-repl-${fancy_id_counter++}`;
+
+                
+                const message = create_list_of_array(
+                    [{key: null, val: self.message?.[lang_sel]}],
+                    null,
+                    message_id,
+                    not_obsolete
+                );
+                const old_message = create_list_of_array(
+                    [{key: null, val: self.old_message?.[lang_sel]}],
+                    ["lsw-dict-obsolete"],
+                    old_message_id,
+                    false
+                );
+                const variants = create_list_of_array(
+                    Object.keys(self.variants || {}).flatMap(function(vr){ return {key: vr, val: self.variants[vr].message?.[lang_sel]};}),
+                    null,
+                    variants_id,
+                    false
+                );
+                const old_variants = create_list_of_array(
+                    Object.keys(self.old_variants || {}).flatMap(function(vr){ return {key: vr, val: self.old_variants[vr].message?.[lang_sel]};}),
+                    ["lsw-dict-obsolete"],
+                    old_variants_id,
+                    false
+                );
+                const replacements = create_list_of_array(
+                    [{key: null, val: self.replacements}],
+                    ["lsw-dict-replacement"],
+                    replacements_id,
+                    !not_obsolete
+                );
+
+                //const message       = create_list_of_array(self.message?.[lang_sel],                                                    null,                       `G-${k}-msg`,   not_obsolete);
+                //const old_message   = create_list_of_array(self.old_message?.[lang_sel],                                                ["lsw-dict-obsolete"],      `G-${k}-omsg`,  false);
+                //const variants      = create_list_of_array(Object.values(self.variants || {}).flatMap(e => e.message?.[lang_sel]),      null,                       `G-${k}-var`,   false);
+                //const old_variants  = create_list_of_array(Object.values(self.old_variants || {}).flatMap(e => e.message?.[lang_sel]),  ["lsw-dict-obsolete"],      `G-${k}-ovar`,  false);
+                //const replacements  = create_list_of_array(self.replacements,                                                           ["lsw-dict-replacement"],   `G-${k}-repl`,  !not_obsolete);
 
                 // === TITLE === //
                 const title_div = document.createElement("div");
@@ -333,24 +389,24 @@ const dict = {
                 title_head.classList.add("lsw-bold");
                 title_head.classList.add("lsw-title");
                 title_head.classList.add("lsw-inline");
+                title_head.classList.add("lsw-arrowed");
                 if (self.obsolete === true) {
                     title_head.classList.add("lsw-dict-obsolete");
                     title_head.setAttribute("title", "Obsoleto. Verifique por alternativas.");
                 }
 
                 title_div.classList.add("lsw-inline");
-                title_div.classList.add("lsw-arrowed");
                 title_div.appendChild(title_head);
 
                 // === SELECTOR === //
                 const div_selector = document.createElement("div");
                 div_selector.style.display = "flex";
 
-                div_selector.appendChild(create_button_enabler("📗", "Traduções",                       `G-${k}-msg`,  message == null,          not_obsolete));
-                div_selector.appendChild(create_button_enabler("📕", "Traduções obsoletas",             `G-${k}-omsg`, old_message == null,      false));
-                div_selector.appendChild(create_button_enabler("🌟", "Variações",                       `G-${k}-var`,  self.variants == null,    false));
-                div_selector.appendChild(create_button_enabler("⭐", "Variações obsoletas",             `G-${k}-ovar`, self.old_variants == null,false));
-                div_selector.appendChild(create_button_enabler("🔄", "Substituído por",                 `G-${k}-repl`, replacements == null,     !not_obsolete));
+                div_selector.appendChild(create_button_enabler("📗", "Traduções",            message_id,      message == null,          not_obsolete));
+                div_selector.appendChild(create_button_enabler("📕", "Traduções obsoletas",  old_message_id,  old_message == null,      false));
+                div_selector.appendChild(create_button_enabler("🌟", "Variações",            variants_id,     self.variants == null,    false));
+                div_selector.appendChild(create_button_enabler("⭐", "Variações obsoletas",  old_variants_id, self.old_variants == null,false));
+                div_selector.appendChild(create_button_enabler("🔄", "Substituído por",      replacements_id, replacements == null,     !not_obsolete));
                 
                 // === MEANINGS === //
                 const desc_div = document.createElement("div");
