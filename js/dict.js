@@ -132,39 +132,47 @@ const affixes = {
             _fe(this.prefixes, function(group) 
             {
                 if (group.filter_len !== ret.type) return;
-
-                _fe(group.cases, function(each) 
-                {
-                    const keys = Object.keys(each);
-
-                    _fe(keys, function(one) 
+                
+                for(let found_one = true; found_one;) {
+                    found_one = false;
+                    _fe(group.cases, function(each) 
                     {
-                        if (ret.base.startsWith(one)) {
-                            ret.prefixes[ret.prefixes.length] = each[one]; // like pa: { LANG: .... }
-                            ret.base = ret.base.substring(one.length);
-                            return false;
-                        }
+                        const keys = Object.keys(each);
+
+                        _fe(keys, function(one) 
+                        {
+                            if (ret.base.startsWith(one)) {
+                                ret.prefixes[ret.prefixes.length] = each[one]; // like pa: { LANG: .... }
+                                ret.base = ret.base.substring(one.length);
+                                return false;
+                            }
+                        });
                     });
-                });
+                }
             });
 
             _fe(this.suffixes, function(group) 
             {
                 if (group.filter_len !== ret.type) return;
+                
+                for(let found_one = true; found_one;) {
+                    found_one = false;
 
-                _fe(group.cases, function(each) 
-                {
-                    const keys = Object.keys(each);
-
-                    _fe(keys, function(one) 
+                    _fe(group.cases, function(each) 
                     {
-                        if (ret.base.endsWith(one)) {
-                            ret.suffixes[ret.suffixes.length] = each[one]; // like pa: { LANG: .... }
-                            ret.base = ret.base.substring(0, ret.base.length - one.length);
-                            return false;
-                        }
+                        const keys = Object.keys(each);
+
+                        _fe(keys, function(one) 
+                        {
+                            if (ret.base.endsWith(one)) {
+                                ret.suffixes[ret.suffixes.length] = each[one]; // like pa: { LANG: .... }
+                                ret.base = ret.base.substring(0, ret.base.length - one.length);
+                                found_one = true;
+                                return false;
+                            }
+                        });
                     });
-                });
+                }
             });
         }
         ret.success = ret.base.length === ret.type;
