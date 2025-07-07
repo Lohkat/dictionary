@@ -727,6 +727,8 @@ const dict = {
             };
         }
 
+        word = word.toLowerCase().trim();
+
         const larinuim = this._SearchLarinuim(word);
         const translated = this._SearchTranslated(word);
 
@@ -1009,16 +1011,36 @@ const dict = {
             message: {
                 br: [
                     "almoçar",
+                    "alimentar",
                     "lanchar",
                     "entupir",
                     "pintar",
                     "pincelar",
                     "comer",
-                    "preencher"
+                    "preencher",
+                    "merendar"
                 ]
             },
             examples: [],
-            variants: null
+            variants: {
+                algku: {
+                    message: {
+                        br: [
+                            "almoço",
+                            "alimento",
+                            "lanche",
+                            "entupimento",
+                            "pintura",
+                            "pincelada",
+                            "comida",
+                            "preenchimento",
+                            "refeição",
+                            "piquenique",
+                            "merenda"
+                        ]
+                    }
+                }
+            }
         },
         awf: {
             message: {
@@ -1771,7 +1793,8 @@ const dict = {
                     "desconectar",
                     "desplugar",
                     "terminar",
-                    "abortar"
+                    "abortar",
+                    "evitar"
                 ]
             },
             old_message: {
@@ -1795,7 +1818,8 @@ const dict = {
                             "desconexão",
                             "desplugamento",
                             "término",
-                            "aborto"
+                            "aborto",
+                            "evitação"
                         ]
                     }
                 }
@@ -3713,6 +3737,15 @@ const dict = {
             examples: [],
             variants: null
         },
+        bala: {
+            message: {
+                br: [
+                    "maçã"
+                ]
+            },
+            examples: [],
+            variants: null
+        },
         bduh: {
             message: {
                 br: [
@@ -3789,17 +3822,29 @@ const dict = {
         brod: {
             message: {
                 br: [
+                    "ingerível",
+                    "comestível"
+                ]
+            },
+            old_message: {
+                br: [
                     "comida",
                     "alimento",
                     "refeição",
                     "lanche",
                     "piquenique",
                     "remédio",
-                    "ingerível"
+                    "medicamento",
+                    "tratamento",
+                    "cura"
                 ]
             },
             examples: [],
-            variants: null
+            variants: null,
+            replacements: [
+                "algku",
+                "euyt"
+            ]
         },
         brot: {
             message: {
@@ -4497,7 +4542,8 @@ const dict = {
                     "seringa",
                     "remédio",
                     "drogas",
-                    "medicamento"
+                    "medicamento",
+                    "tratamento"
                 ]
             },
             examples: [],
@@ -6074,6 +6120,15 @@ const dict = {
             examples: [],
             variants: null
         },
+        lara: {
+            message: {
+                br: [
+                    "fruta"
+                ]
+            },
+            examples: [],
+            variants: null
+        },
         lare: {
             message: {
                 br: [
@@ -6097,6 +6152,18 @@ const dict = {
             message: {
                 br: [
                     "ocupado"
+                ]
+            },
+            examples: [],
+            variants: null
+        },
+        layw: {
+            message: {
+                br: [
+                    "tapete",
+                    "carpete",
+                    "piso",
+                    "forro",
                 ]
             },
             examples: [],
@@ -7343,6 +7410,16 @@ const dict = {
             examples: [],
             variants: null
         },
+        ptuf: {
+            message: {
+                br: [
+                    "roda",
+                    "aro"
+                ]
+            },
+            examples: [],
+            variants: null
+        },
         puag: {
             message: {
                 br: [
@@ -7892,6 +7969,18 @@ const dict = {
             examples: [],
             variants: null
         },
+        snag: {
+            message: {
+                br: [
+                    "bicicleta",
+                    "bike",
+                    "ciclista",
+                    "ciclismo"                    
+                ]
+            },
+            examples: [],
+            variants: null
+        },
         snop: {
             message: {
                 br: [
@@ -8058,6 +8147,18 @@ const dict = {
             replacements: [
                 "grah"
             ]
+        },
+        swak: {
+            message: {
+                br: [
+                    "verdura",
+                    "vegetal",
+                    "vegetação",
+                    "planta"
+                ]
+            },
+            examples: [],
+            variants: null
         },
         swen: {
             message: {
