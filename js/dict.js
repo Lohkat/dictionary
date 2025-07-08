@@ -185,22 +185,26 @@ const affixes = {
 /*
 Structure of words:
 WORD: {
-    message: {
+    message: { // ok
         LANGUAGE: [
             "MEANINGS_IN_THIS_LANGUAGE",
             ...
         ],
         ...
     },
-    examples: [ // MAY HAVE 0 OR MORE
+    examples: [ // MAY HAVE 0 OR MORE // ok
         {
             phrase: "EXAMPLE OF USAGE 1",
             message: {
-                LANGUAGE: "TRANSLATED IN THIS LANGUAGE"
+                LANGUAGE: [
+                    "TRANSLATED IN THIS LANGUAGE",
+                    ...
+                ],
+                ...
             }
         }
     ],
-    variants: { // MAY BE NULL IF EMPTY
+    variants: { // MAY BE NULL IF EMPTY  // ok
         "WORD_COMBO_LIKE_ABC123": {
             message: {
                 LANGUAGE: [
@@ -213,14 +217,14 @@ WORD: {
         ...
     },
     // IF PARTIALLY OBSOLETE OR OBSOLETE, THESE FIELDS ARE PRESENT, but "obsolete: true" is not
-    old_message: {
+    old_message: {  // ok
         LANGUAGE: [
             "MEANINGS_IN_THIS_LANGUAGE",
             ...
         ],
         ...
     },
-    old_variants: { // MAY BE NULL IF EMPTY
+    old_variants: { // MAY BE NULL IF EMPTY  // ok
         "WORD_COMBO_LIKE_ABC123": {
             message: {
                 LANGUAGE: [
@@ -234,7 +238,7 @@ WORD: {
     }
     // IF OBSOLETE, THESE FIELDS ARE PRESENT
     obsolete: true,
-    replacements: [
+    replacements: [  // ok
         "KEYS TO CONSIDER",
         ...
     ]
@@ -288,9 +292,7 @@ const dict = {
                             p.prepend(span);
                             div.appendChild(p);
                         });
-                    });
-
-                    
+                    });                    
 
                     return div;
                 }
@@ -299,18 +301,72 @@ const dict = {
                     
                     el.classList.add("lsw-btn_default");
                     el.classList.add("bar_selector");
+                    el.classList.add("lsw-dict-nogrow");
 
                     if (disabled === true) el.classList.add("disabled");
                     if (selected === true) el.classList.add("selected");
 
-                    el.setAttribute("text", text);
+                    el.setAttribute("text-delayed", text);
+                    el.setAttribute("text", resume);
                     el.setAttribute("resumed-text", resume);
                     el.setAttribute("id-target", target_id_to_toggle_with);
+
+                    function delayed_functionality(timeout_time) {
+                        // cancel current timeout
+                        const ev_id = el.getAttribute("ev-id");
+                        if (ev_id) clearTimeout(ev_id);
+                        el.removeAttribute("ev-id");
+
+                        el.setAttribute("ev-id", setTimeout(function() {
+                            const state = el.getAttribute("ev-state");
+
+                            switch(state) {
+                            case "enter":
+                                el.setAttribute("text", el.getAttribute("text-delayed"));
+                                break;
+                            case "exit":
+                                el.setAttribute("text", el.getAttribute("resumed-text"));
+                                break;
+                            }
+                            el.removeAttribute("ev-state");
+                        }, timeout_time));
+                    }
+
+                    el.addEventListener("mouseenter", function() {
+                        const state = el.getAttribute("ev-state");
+
+                        switch(state) {
+                        case "enter":
+                        case "exit":
+                            el.setAttribute("ev-state", "enter");
+                            break;
+                        default:
+                            el.setAttribute("ev-state", "enter");
+                            delayed_functionality(1000);
+                        }
+
+                    });
+                    el.addEventListener("mouseout", function() {
+                        const state = el.getAttribute("ev-state");
+
+                        switch(state) {
+                        case "enter":
+                        case "exit":
+                            el.setAttribute("ev-state", "exit");
+                            break;
+                        default:
+                            el.setAttribute("ev-state", "exit");
+                            delayed_functionality(2000);
+                        }
+                    });
 
                     el.addEventListener("click", function(ev) {
                         const src = ev.target;
 
                         if (src.classList.contains("disabled")) return;
+
+                        el.removeAttribute("ev-state");
+                        delayed_functionality(10);
 
                         const target_id = src.getAttribute("id-target");
                         const target_el = document.getElementById(target_id);
@@ -346,6 +402,7 @@ const dict = {
                 // val: meanings of key
 
                 const message_id        = `G-${k}-msg-${fancy_id_counter++}`;
+                const example_id        = `G-${k}-ex-${fancy_id_counter++}`;
                 const old_message_id    = `G-${k}-omsg-${fancy_id_counter++}`;
                 const variants_id       = `G-${k}-var-${fancy_id_counter++}`;
                 const old_variants_id   = `G-${k}-ovar-${fancy_id_counter++}`;
@@ -357,6 +414,12 @@ const dict = {
                     null,
                     message_id,
                     not_obsolete
+                );
+                const examples = create_list_of_array(
+                    self.examples?.flatMap(function(vr){return {key: vr.phrase, val: vr.message?.[lang_sel]}; }),
+                    null,
+                    example_id,
+                    false
                 );
                 const old_message = create_list_of_array(
                     [{key: null, val: self.old_message?.[lang_sel]}],
@@ -383,12 +446,6 @@ const dict = {
                     !not_obsolete
                 );
 
-                //const message       = create_list_of_array(self.message?.[lang_sel],                                                    null,                       `G-${k}-msg`,   not_obsolete);
-                //const old_message   = create_list_of_array(self.old_message?.[lang_sel],                                                ["lsw-dict-obsolete"],      `G-${k}-omsg`,  false);
-                //const variants      = create_list_of_array(Object.values(self.variants || {}).flatMap(e => e.message?.[lang_sel]),      null,                       `G-${k}-var`,   false);
-                //const old_variants  = create_list_of_array(Object.values(self.old_variants || {}).flatMap(e => e.message?.[lang_sel]),  ["lsw-dict-obsolete"],      `G-${k}-ovar`,  false);
-                //const replacements  = create_list_of_array(self.replacements,                                                           ["lsw-dict-replacement"],   `G-${k}-repl`,  !not_obsolete);
-
                 // === TITLE === //
                 const title_div = document.createElement("div");
                 const title_head = document.createElement("h2");
@@ -408,9 +465,11 @@ const dict = {
 
                 // === SELECTOR === //
                 const div_selector = document.createElement("div");
-                div_selector.style.display = "flex";
+                div_selector.style.gap = "0.1em";
+                div_selector.classList.add("lsw-autoflex-up8");
 
                 div_selector.appendChild(create_button_enabler("📗", "Traduções",            message_id,      message == null,          not_obsolete));
+                div_selector.appendChild(create_button_enabler("📖", "Exemplos",             example_id,      examples == null,         false));
                 div_selector.appendChild(create_button_enabler("📕", "Traduções obsoletas",  old_message_id,  old_message == null,      false));
                 div_selector.appendChild(create_button_enabler("🌟", "Variações",            variants_id,     self.variants == null,    false));
                 div_selector.appendChild(create_button_enabler("⭐", "Variações obsoletas",  old_variants_id, self.old_variants == null,false));
@@ -420,6 +479,7 @@ const dict = {
                 const desc_div = document.createElement("div");
 
                 if (message)                    desc_div.appendChild(message);
+                if (examples)                   desc_div.appendChild(examples);
                 if (old_message)                desc_div.appendChild(old_message);
                 if (self.variants != null)      desc_div.appendChild(variants);
                 if (self.old_variants != null)  desc_div.appendChild(old_variants);
@@ -488,20 +548,29 @@ const dict = {
                 if (has_examples) {
                     let had_faulty_key = false;
                     let had_faulty_message = false;
+                    let had_faulty_message_examples = false;
 
                     self.examples.forEach(each => {
                         if (!each.phrase || !each.message || Object.keys(each.message).length === 0) {
                             had_faulty_key = true;
                         }
                         for (language in each.message) {
-                            if (typeof each.message[language] !== "string") {
+                            if (!Array.isArray(each.message[language])) {
                                 had_faulty_message = true;
+                            }
+                            else {
+                                each.message[language].forEach(msg => {
+                                    if (typeof msg !== "string") {
+                                        had_faulty_message_examples = true;
+                                    }
+                                });
                             }
                         }
                     });
 
                     if (had_faulty_key) return "Faulty key in examples (phrase or message)";
-                    if (had_faulty_message) return "Faulty message in examples messages (not string)";
+                    if (had_faulty_message) return "Faulty array of messages in examples messages (not array / invalid)";
+                    if (had_faulty_message_examples) return "Faulty message case in examples messages (not string)";
                 }
 
                 return null;
@@ -768,13 +837,17 @@ const dict = {
                 {
                     phrase: "ae tue gatx",
                     message: {
-                        br: "você é bonito"
+                        br: [
+                            "você é bonito"
+                        ]
                     }
                 },
                 {
                     phrase: "ae pod jap",
                     message: {
-                        br: "ele pode voar"
+                        br: [
+                            "ele pode voar"
+                        ]
                     }
                 }
             ],
@@ -791,13 +864,17 @@ const dict = {
                 {
                     phrase: "ai tue topt",
                     message: {
-                        br: "isso é divertido"
+                        br: [
+                            "isso é divertido"
+                        ]
                     }
                 },
                 {
                     phrase: "maol ai tuepa wafku",
                     message: {
-                        br: "então isso foi concluído"
+                        br: [
+                            "então isso foi concluído"
+                        ]
                     }
                 }
             ],
@@ -814,7 +891,9 @@ const dict = {
                 {
                     phrase: "olal edof tue as",
                     message: {
-                        br: "o dinheiro é nosso (do grupo da pessoa falando)"
+                        br: [
+                            "o dinheiro é nosso (do grupo da pessoa falando)"
+                        ]
                     }
                 }
             ],
@@ -831,7 +910,9 @@ const dict = {
                 {
                     phrase: "au brad lolk tohd etit",
                     message: {
-                        br: "nosso pão de cada dia (todos aplicáveis)"
+                        br: [
+                            "nosso pão de cada dia (todos aplicáveis)"
+                        ]
                     }
                 }
             ],
@@ -846,7 +927,7 @@ const dict = {
                     "suas"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ea: {
@@ -856,7 +937,7 @@ const dict = {
                     "sua"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         eu: {
@@ -866,7 +947,7 @@ const dict = {
                     "minha"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sa: {
@@ -875,7 +956,7 @@ const dict = {
                     "nós"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ua: {
@@ -884,7 +965,7 @@ const dict = {
                     "nós"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ue: {
@@ -893,7 +974,7 @@ const dict = {
                     "eu"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         va: {
@@ -903,7 +984,7 @@ const dict = {
                     "vocês"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wa: {
@@ -912,7 +993,7 @@ const dict = {
                     "aquilo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         abd: {
@@ -930,7 +1011,7 @@ const dict = {
                     "provar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 abdku: {
                     message: {
@@ -965,7 +1046,7 @@ const dict = {
                     "existir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         adi: {
@@ -977,7 +1058,7 @@ const dict = {
                     "desabrochar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         aka: {
@@ -989,7 +1070,7 @@ const dict = {
                     "conseguir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ale: {
@@ -1004,7 +1085,7 @@ const dict = {
                     "desculpar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         alg: {
@@ -1021,7 +1102,7 @@ const dict = {
                     "merendar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 algku: {
                     message: {
@@ -1055,7 +1136,7 @@ const dict = {
                     "devolver"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         bak: {
@@ -1071,7 +1152,7 @@ const dict = {
                     "ver"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         bal: {
@@ -1086,7 +1167,7 @@ const dict = {
                     "ler"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         bih: {
@@ -1103,7 +1184,7 @@ const dict = {
                     "terminar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         bla: {
@@ -1120,7 +1201,7 @@ const dict = {
                     "entregar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         bly: {
@@ -1141,7 +1222,7 @@ const dict = {
                     "trair"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         bty: {
@@ -1153,7 +1234,7 @@ const dict = {
                     "obter"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         buy: {
@@ -1164,7 +1245,7 @@ const dict = {
                     "tampar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         byh: {
@@ -1179,7 +1260,7 @@ const dict = {
                     "limpar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         cla: {
@@ -1199,7 +1280,7 @@ const dict = {
                     "anunciar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         cra: {
@@ -1215,7 +1296,7 @@ const dict = {
                     "trepar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         cro: {
@@ -1241,7 +1322,7 @@ const dict = {
                     "reconhecer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         cto: {
@@ -1259,7 +1340,7 @@ const dict = {
                     "agradar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dak: {
@@ -1280,7 +1361,7 @@ const dict = {
                     "viciar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dap: {
@@ -1301,7 +1382,7 @@ const dict = {
                     "analisar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dec: {
@@ -1327,7 +1408,7 @@ const dict = {
                     "traçar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 decku: {
                     message: {
@@ -1376,7 +1457,7 @@ const dict = {
                     "falsar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         def: {
@@ -1391,7 +1472,7 @@ const dict = {
                     "zelar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dek: {
@@ -1410,7 +1491,7 @@ const dict = {
                     "desproteger"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 dekku: {
                     message: {
@@ -1447,7 +1528,7 @@ const dict = {
                     "infamar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dla: {
@@ -1469,7 +1550,7 @@ const dict = {
                     "aderir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dos: {
@@ -1490,7 +1571,7 @@ const dict = {
                     "precaver"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         duh: {
@@ -1508,7 +1589,7 @@ const dict = {
                     "treinar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dwa: {
@@ -1528,7 +1609,7 @@ const dict = {
                     "zoar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dyd: {
@@ -1551,9 +1632,11 @@ const dict = {
             },
             examples: [
                 {
-                    phrase: "espa trta eu dyd lolk ae?",
+                    phrase: "wu espa eu dyd lolk ae?",
                     message: {
-                        br: "Por que eu duvido de você?"
+                        br: [
+                            "Por que eu duvido de você?"
+                        ]
                     }
                 }
             ],
@@ -1601,7 +1684,7 @@ const dict = {
                     "explorar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ene: {
@@ -1624,7 +1707,7 @@ const dict = {
                     "repassar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 eneku: {
                     message: {
@@ -1657,7 +1740,7 @@ const dict = {
                     "golpear"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 eniku: {
                     message: {
@@ -1685,7 +1768,7 @@ const dict = {
                     "engravidar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 enyku: {
                     message: {
@@ -1740,7 +1823,7 @@ const dict = {
                     "abortar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         esy: {
@@ -1757,7 +1840,7 @@ const dict = {
                     "pressionar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         eti: {
@@ -1769,7 +1852,7 @@ const dict = {
                     "combater"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 etiku: {
                     message: {
@@ -1807,7 +1890,7 @@ const dict = {
                     "descansar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 etyku: {
                     message: {
@@ -1851,7 +1934,7 @@ const dict = {
                     "descansar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 etwku: {
                     message: {
@@ -1870,7 +1953,7 @@ const dict = {
                     "alugar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 fabku: {
                     message: {
@@ -1895,7 +1978,7 @@ const dict = {
                     "movimentar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 faqku: {
                     message: {
@@ -1927,7 +2010,7 @@ const dict = {
                     "transformar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fle: {
@@ -1945,7 +2028,7 @@ const dict = {
                     "motivar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         flo: {
@@ -1962,7 +2045,7 @@ const dict = {
                     "desamarrar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fti: {
@@ -1978,7 +2061,7 @@ const dict = {
                     "sincronizar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fur: {
@@ -2004,7 +2087,7 @@ const dict = {
                     "sustentar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 furku: {
                     message: {
@@ -2051,7 +2134,7 @@ const dict = {
                     "desmascarar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gaq: {
@@ -2066,7 +2149,7 @@ const dict = {
                     "caminhar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gds: {
@@ -2082,7 +2165,7 @@ const dict = {
                     "oferecer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gka: {
@@ -2095,7 +2178,7 @@ const dict = {
                     "focar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 gkaku: {
                     message: {
@@ -2129,7 +2212,7 @@ const dict = {
                     "tachar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 gkuku: {
                     message: {
@@ -2171,7 +2254,7 @@ const dict = {
                     "finalizar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gto: {
@@ -2181,7 +2264,7 @@ const dict = {
                     "apreciar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         guk: {
@@ -2190,7 +2273,7 @@ const dict = {
                     "subir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         hug: {
@@ -2199,7 +2282,7 @@ const dict = {
                     "avisar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         hyc: {
@@ -2210,7 +2293,7 @@ const dict = {
                     "ver"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 hycku: {
                     message: {
@@ -2232,7 +2315,7 @@ const dict = {
                     "verificar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         hyi: {
@@ -2243,7 +2326,7 @@ const dict = {
                     "sumir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ihk: {
@@ -2252,7 +2335,7 @@ const dict = {
                     "adorar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ike: {
@@ -2261,7 +2344,7 @@ const dict = {
                     "dever"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         iki: {
@@ -2270,7 +2353,7 @@ const dict = {
                     "merecer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ikk: {
@@ -2279,7 +2362,7 @@ const dict = {
                     "atrapalhar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         jap: {
@@ -2291,7 +2374,7 @@ const dict = {
                     "sobrevoar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         jip: {
@@ -2300,7 +2383,7 @@ const dict = {
                     "beijar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         jki: {
@@ -2309,7 +2392,7 @@ const dict = {
                     "lavar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         jol: {
@@ -2319,7 +2402,7 @@ const dict = {
                     "golpear"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kaa: {
@@ -2329,7 +2412,7 @@ const dict = {
                     "invocar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kei: {
@@ -2339,7 +2422,7 @@ const dict = {
                     "servir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kek: {
@@ -2348,7 +2431,7 @@ const dict = {
                     "desapontar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kgo: {
@@ -2357,7 +2440,7 @@ const dict = {
                     "libertar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kik: {
@@ -2366,7 +2449,7 @@ const dict = {
                     "dormir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kok: {
@@ -2375,7 +2458,7 @@ const dict = {
                     "veja"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kop: {
@@ -2385,7 +2468,7 @@ const dict = {
                     "participar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         koy: {
@@ -2395,7 +2478,7 @@ const dict = {
                     "amocar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         krk: {
@@ -2404,7 +2487,7 @@ const dict = {
                     "atualizar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kro: {
@@ -2413,7 +2496,7 @@ const dict = {
                     "fazer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lak: {
@@ -2422,7 +2505,7 @@ const dict = {
                     "abaixar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         laq: {
@@ -2433,7 +2516,7 @@ const dict = {
                     "trazer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lar: {
@@ -2444,7 +2527,7 @@ const dict = {
                     "manusear"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lay: {
@@ -2454,7 +2537,7 @@ const dict = {
                     "ouvir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         laz: {
@@ -2463,7 +2546,7 @@ const dict = {
                     "iluminar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lea: {
@@ -2472,7 +2555,7 @@ const dict = {
                     "parar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         leh: {
@@ -2481,7 +2564,7 @@ const dict = {
                     "adivinhar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lep: {
@@ -2490,7 +2573,7 @@ const dict = {
                     "brincar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lii: {
@@ -2499,7 +2582,7 @@ const dict = {
                     "sorrir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lio: {
@@ -2508,7 +2591,7 @@ const dict = {
                     "entender"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lod: {
@@ -2517,7 +2600,7 @@ const dict = {
                     "estudar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lof: {
@@ -2526,7 +2609,7 @@ const dict = {
                     "odiar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         log: {
@@ -2535,7 +2618,7 @@ const dict = {
                     "chutar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lot: {
@@ -2546,7 +2629,7 @@ const dict = {
                     "roubar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lra: {
@@ -2555,7 +2638,7 @@ const dict = {
                     "cantar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lui: {
@@ -2565,7 +2648,7 @@ const dict = {
                     "haver"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         luk: {
@@ -2576,7 +2659,7 @@ const dict = {
                     "manchar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 lukku: {
                     message: {
@@ -2596,7 +2679,7 @@ const dict = {
                     "acertar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lyr: {
@@ -2607,7 +2690,7 @@ const dict = {
                     "fracassar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         mig: {
@@ -2618,7 +2701,7 @@ const dict = {
                     "distribuir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nag: {
@@ -2627,7 +2710,7 @@ const dict = {
                     "estressar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nak: {
@@ -2636,7 +2719,7 @@ const dict = {
                     "cochilar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         naq: {
@@ -2647,7 +2730,7 @@ const dict = {
                     "preferir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         naz: {
@@ -2656,7 +2739,7 @@ const dict = {
                     "descansar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         neh: {
@@ -2665,7 +2748,7 @@ const dict = {
                     "nascer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nhu: {
@@ -2676,7 +2759,7 @@ const dict = {
                     "mudar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nih: {
@@ -2685,7 +2768,7 @@ const dict = {
                     "renascer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nog: {
@@ -2695,7 +2778,7 @@ const dict = {
                     "vir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         obs: {
@@ -2704,7 +2787,7 @@ const dict = {
                     "observar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ofi: {
@@ -2713,7 +2796,7 @@ const dict = {
                     "trepar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         oky: {
@@ -2722,7 +2805,7 @@ const dict = {
                     "agradecer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ole: {
@@ -2731,7 +2814,7 @@ const dict = {
                     "apagar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         olf: {
@@ -2740,7 +2823,7 @@ const dict = {
                     "remover"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         olg: {
@@ -2749,7 +2832,7 @@ const dict = {
                     "acabar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         oli: {
@@ -2758,7 +2841,7 @@ const dict = {
                     "dar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         olk: {
@@ -2767,7 +2850,7 @@ const dict = {
                     "adiar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ori: {
@@ -2776,7 +2859,7 @@ const dict = {
                     "fechar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         par: {
@@ -2785,7 +2868,7 @@ const dict = {
                     "enfiar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pie: {
@@ -2794,7 +2877,7 @@ const dict = {
                     "viajar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pka: {
@@ -2803,7 +2886,7 @@ const dict = {
                     "sapatear"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         plk: {
@@ -2812,7 +2895,7 @@ const dict = {
                     "responder"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         plo: {
@@ -2821,7 +2904,7 @@ const dict = {
                     "abrir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pod: {
@@ -2830,7 +2913,7 @@ const dict = {
                     "poder"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pop: {
@@ -2841,7 +2924,7 @@ const dict = {
                     "prosseguir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pra: {
@@ -2850,7 +2933,7 @@ const dict = {
                     "escutar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pre: {
@@ -2860,7 +2943,7 @@ const dict = {
                     "declarar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pri: {
@@ -2870,7 +2953,7 @@ const dict = {
                     "visitar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         qne: {
@@ -2881,7 +2964,7 @@ const dict = {
                     "querer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         qnm: {
@@ -2890,7 +2973,7 @@ const dict = {
                     "salvar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rai: {
@@ -2901,7 +2984,7 @@ const dict = {
                     "telefonar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rau: {
@@ -2912,7 +2995,7 @@ const dict = {
                     "sonhar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         reh: {
@@ -2921,7 +3004,7 @@ const dict = {
                     "pagar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rka: {
@@ -2930,7 +3013,7 @@ const dict = {
                     "gravar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rud: {
@@ -2939,7 +3022,7 @@ const dict = {
                     "prestar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ruh: {
@@ -2948,7 +3031,7 @@ const dict = {
                     "sair"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rye: {
@@ -2958,7 +3041,7 @@ const dict = {
                     "escrever"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ryi: {
@@ -2967,7 +3050,7 @@ const dict = {
                     "passar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         saa: {
@@ -2976,7 +3059,7 @@ const dict = {
                     "prometer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         saf: {
@@ -2985,7 +3068,7 @@ const dict = {
                     "abusar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sak: {
@@ -2994,7 +3077,7 @@ const dict = {
                     "faltar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sea: {
@@ -3003,7 +3086,7 @@ const dict = {
                     "comprometer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sek: {
@@ -3013,7 +3096,7 @@ const dict = {
                     "por"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sem: {
@@ -3022,7 +3105,7 @@ const dict = {
                     "deixar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sfy: {
@@ -3031,7 +3114,7 @@ const dict = {
                     "filosofar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sih: {
@@ -3042,7 +3125,7 @@ const dict = {
                     "jogar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ska: {
@@ -3051,7 +3134,7 @@ const dict = {
                     "dançar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sle: {
@@ -3060,7 +3143,7 @@ const dict = {
                     "faxinar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         squ: {
@@ -3069,7 +3152,7 @@ const dict = {
                     "monitorar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sru: {
@@ -3078,7 +3161,7 @@ const dict = {
                     "tentar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sue: {
@@ -3087,7 +3170,7 @@ const dict = {
                     "abraçar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         suk: {
@@ -3096,7 +3179,7 @@ const dict = {
                     "editar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         swa: {
@@ -3105,7 +3188,7 @@ const dict = {
                     "pirar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         swi: {
@@ -3115,7 +3198,7 @@ const dict = {
                     "desfazer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tar: {
@@ -3124,7 +3207,7 @@ const dict = {
                     "ter"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tbd: {
@@ -3138,7 +3221,7 @@ const dict = {
                     "resistir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tnu: {
@@ -3148,7 +3231,7 @@ const dict = {
                     "viver"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tol: {
@@ -3158,7 +3241,7 @@ const dict = {
                     "vencer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         top: {
@@ -3167,7 +3250,7 @@ const dict = {
                     "ficar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tra: {
@@ -3176,7 +3259,7 @@ const dict = {
                     "importar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tre: {
@@ -3185,7 +3268,7 @@ const dict = {
                     "aceitar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tua: {
@@ -3194,7 +3277,7 @@ const dict = {
                     "socializar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tue: {
@@ -3204,7 +3287,7 @@ const dict = {
                     "ser"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tyh: {
@@ -3213,7 +3296,7 @@ const dict = {
                     "cuidar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ugs: {
@@ -3223,7 +3306,7 @@ const dict = {
                     "voltar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uhm: {
@@ -3232,7 +3315,7 @@ const dict = {
                     "precisar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uls: {
@@ -3244,7 +3327,7 @@ const dict = {
                     "taxar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 ulsku: {
                     message: {
@@ -3269,7 +3352,7 @@ const dict = {
                     "analisar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uru: {
@@ -3278,7 +3361,7 @@ const dict = {
                     "memorizar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uwe: {
@@ -3288,7 +3371,7 @@ const dict = {
                     "esperar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uwo: {
@@ -3297,7 +3380,7 @@ const dict = {
                     "cozinhar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uyo: {
@@ -3306,7 +3389,7 @@ const dict = {
                     "amar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         waa: {
@@ -3315,7 +3398,7 @@ const dict = {
                     "ousar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wab: {
@@ -3324,7 +3407,7 @@ const dict = {
                     "trocar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wae: {
@@ -3335,7 +3418,7 @@ const dict = {
                     "pular"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         waf: {
@@ -3344,7 +3427,7 @@ const dict = {
                     "concluir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 awfku: {
                     message: {
@@ -3361,7 +3444,7 @@ const dict = {
                     "andar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wre: {
@@ -3370,7 +3453,7 @@ const dict = {
                     "cercar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wri: {
@@ -3379,7 +3462,7 @@ const dict = {
                     "reclamar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wug: {
@@ -3388,7 +3471,7 @@ const dict = {
                     "cansar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wum: {
@@ -3397,7 +3480,7 @@ const dict = {
                     "acordar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wyt: {
@@ -3407,7 +3490,7 @@ const dict = {
                     "machucar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         xur: {
@@ -3416,7 +3499,7 @@ const dict = {
                     "atender"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yaa: {
@@ -3426,7 +3509,7 @@ const dict = {
                     "valer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yhe: {
@@ -3435,7 +3518,7 @@ const dict = {
                     "esquecer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yio: {
@@ -3444,7 +3527,7 @@ const dict = {
                     "abandonar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yte: {
@@ -3453,7 +3536,7 @@ const dict = {
                     "aproximar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         zno: {
@@ -3462,7 +3545,7 @@ const dict = {
                     "sentir"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         zon: {
@@ -3471,7 +3554,7 @@ const dict = {
                     "saber"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         zuh: {
@@ -3480,26 +3563,7 @@ const dict = {
                     "morrer"
                 ]
             },
-            examples: [],
-            variants: null
-        },
-        wue: {
-            message: {
-                br: [
-                    "trocado para => koy"
-                ]
-            },
-            examples: [],
-            variants: null
-        },
-        dea: {
-            message: {
-                br: [
-                    "trocado para => dec",
-                    "achar"
-                ]
-            },
-            examples: [],
+            examples: null,
             variants: null
         },
         anne: {
@@ -3508,7 +3572,7 @@ const dict = {
                     "macaco"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         abia: {
@@ -3524,7 +3588,7 @@ const dict = {
                     "sujo"
                 ]
             },            
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "lukku"
@@ -3539,7 +3603,7 @@ const dict = {
                     "título"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         afoh: {
@@ -3553,7 +3617,7 @@ const dict = {
                     "originado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 niafoh: {
                     message: {
@@ -3577,7 +3641,7 @@ const dict = {
                     "área"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ahly: {
@@ -3593,7 +3657,7 @@ const dict = {
                     "área"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "ahli"
@@ -3606,7 +3670,7 @@ const dict = {
                     "habilidade"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         alul: {
@@ -3615,7 +3679,7 @@ const dict = {
                     "cavalo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: {
                 nialul: {
                     message: {
@@ -3642,7 +3706,7 @@ const dict = {
                     "tão"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         anoa: {
@@ -3655,7 +3719,7 @@ const dict = {
                     "verão"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             old_message: {
                 br: [
@@ -3683,7 +3747,7 @@ const dict = {
                     "ponto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         aout: {
@@ -3701,7 +3765,7 @@ const dict = {
                     "via"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         asse: {
@@ -3714,7 +3778,7 @@ const dict = {
                     "oportunidade"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         aved: {
@@ -3723,7 +3787,7 @@ const dict = {
                     "talvez"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         awfo: {
@@ -3734,7 +3798,7 @@ const dict = {
                     "correção"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         bala: {
@@ -3743,7 +3807,7 @@ const dict = {
                     "maçã"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         bduh: {
@@ -3755,7 +3819,7 @@ const dict = {
                     "humorista"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         bite: {
@@ -3767,7 +3831,7 @@ const dict = {
                     "energia"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         blar: {
@@ -3779,7 +3843,7 @@ const dict = {
                     "comentário"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         body: {
@@ -3797,7 +3861,7 @@ const dict = {
                     "arquivo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         bofo: {
@@ -3806,7 +3870,7 @@ const dict = {
                     "brócolis"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         brad: {
@@ -3816,7 +3880,7 @@ const dict = {
                     "massa"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         brod: {
@@ -3839,7 +3903,7 @@ const dict = {
                     "cura"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "algku",
@@ -3853,7 +3917,7 @@ const dict = {
                     "orifício"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         brum: {
@@ -3869,7 +3933,7 @@ const dict = {
                     "incrível"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         brus: {
@@ -3883,7 +3947,7 @@ const dict = {
                     "turma"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         buno: {
@@ -3894,7 +3958,7 @@ const dict = {
                     "ânus"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         bvor: {
@@ -3911,7 +3975,7 @@ const dict = {
                     "roteiro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         carr: {
@@ -3924,7 +3988,7 @@ const dict = {
                     "desgastante"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         cite: {
@@ -3933,7 +3997,7 @@ const dict = {
                     "cinco"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         cloc: {
@@ -3946,7 +4010,7 @@ const dict = {
                     "confuso"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         clon: {
@@ -3956,7 +4020,7 @@ const dict = {
                     "como"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         colk: {
@@ -3967,7 +4031,7 @@ const dict = {
                     "feijoada"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         coln: {
@@ -3979,7 +4043,7 @@ const dict = {
                     "administrador"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         crar: {
@@ -3993,7 +4057,7 @@ const dict = {
                     "meio de transporte de um objeto ou ser vivo por algum meio mecânico"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         cret: {
@@ -4005,7 +4069,7 @@ const dict = {
                     "forma de dizer algo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         crue: {
@@ -4017,7 +4081,7 @@ const dict = {
                     "jumenta"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         cruy: {
@@ -4033,7 +4097,7 @@ const dict = {
                     "organismo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         daeh: {
@@ -4046,7 +4110,7 @@ const dict = {
                     "conhecido amigável"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dayh: {
@@ -4060,7 +4124,7 @@ const dict = {
                     "administração"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         daew: {
@@ -4075,7 +4139,7 @@ const dict = {
                     "importado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dafk: {
@@ -4090,7 +4154,7 @@ const dict = {
                     "guidão"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         daih: {
@@ -4104,7 +4168,7 @@ const dict = {
                     "nsfw"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         daiw: {
@@ -4129,7 +4193,7 @@ const dict = {
                     "perfeito"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "knap",
@@ -4147,7 +4211,7 @@ const dict = {
                     "antiguidade"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dapa: {
@@ -4161,7 +4225,7 @@ const dict = {
                     "competente"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         deft: {
@@ -4174,7 +4238,7 @@ const dict = {
                     "fim"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         defy: {
@@ -4191,7 +4255,7 @@ const dict = {
                     "depois de um tempo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         delf: {
@@ -4200,7 +4264,7 @@ const dict = {
                     "fofo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dept: {
@@ -4211,7 +4275,7 @@ const dict = {
                     "posterior"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dlet: {
@@ -4232,7 +4296,7 @@ const dict = {
                     "se destaca ou é importante para o corpo ou objeto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
 
@@ -4252,7 +4316,7 @@ const dict = {
                     "perdido"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dout: {
@@ -4264,7 +4328,7 @@ const dict = {
                     "doutorado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dovk: {
@@ -4275,7 +4339,7 @@ const dict = {
                     "forma de fazer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         drib: {
@@ -4295,7 +4359,7 @@ const dict = {
                     "inteiro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dtie: {
@@ -4306,7 +4370,7 @@ const dict = {
                     "que funciona de forma digital"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dtye: {
@@ -4317,7 +4381,7 @@ const dict = {
                     "adiantado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dude: {
@@ -4326,7 +4390,7 @@ const dict = {
                     "dois"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dued: {
@@ -4337,7 +4401,7 @@ const dict = {
                     "valor"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         duly: {
@@ -4347,7 +4411,7 @@ const dict = {
                     "múltiplo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         duut: {
@@ -4359,7 +4423,7 @@ const dict = {
                     "que aparece por último"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         dwat: {
@@ -4372,7 +4436,7 @@ const dict = {
                     "mantido fora do alcance"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ebae: {
@@ -4381,7 +4445,7 @@ const dict = {
                     "asfalto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         edof: {
@@ -4391,7 +4455,7 @@ const dict = {
                     "moeda"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         egka: {
@@ -4404,7 +4468,7 @@ const dict = {
                     "águia"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         eitd: {
@@ -4415,7 +4479,7 @@ const dict = {
                     "natural"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         elgh: {
@@ -4427,7 +4491,7 @@ const dict = {
                     "egoísta"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         enge: {
@@ -4437,7 +4501,7 @@ const dict = {
                     "engenheiro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         esge: {
@@ -4451,7 +4515,7 @@ const dict = {
                     "que pensa fora da caixa"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         esiu: {
@@ -4464,7 +4528,7 @@ const dict = {
                     "trancado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         esja: {
@@ -4477,7 +4541,7 @@ const dict = {
                     "defensivo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         espa: {
@@ -4490,7 +4554,16 @@ const dict = {
                     "porquê"
                 ]
             },
-            examples: [],
+            examples: [
+                {
+                    phrase: "wu espa eu dyd lolk ae?",
+                    message: {
+                        br: [
+                            "por que eu duvido de você?"
+                        ]
+                    }
+                }
+            ],
             variants: null
         },
         espe: {
@@ -4499,7 +4572,7 @@ const dict = {
                     "alface"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         etit: {
@@ -4511,7 +4584,7 @@ const dict = {
                     "encontro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         eurt: {
@@ -4528,7 +4601,7 @@ const dict = {
                     "alugado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "pury"
@@ -4546,7 +4619,7 @@ const dict = {
                     "tratamento"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ewrk: {
@@ -4556,7 +4629,7 @@ const dict = {
                     "pneu"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fafa: {
@@ -4565,7 +4638,7 @@ const dict = {
                     "minuto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fafs: {
@@ -4577,7 +4650,7 @@ const dict = {
                     "clássico"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fakk: {
@@ -4588,7 +4661,7 @@ const dict = {
                     "agradecimento"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fein: {
@@ -4601,7 +4674,7 @@ const dict = {
                     "pesquisa"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         feni: {
@@ -4621,7 +4694,7 @@ const dict = {
                     "mais (em algo)"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "jolo"
@@ -4637,7 +4710,7 @@ const dict = {
                     "o que orienta ou comanda com um objetivo educacional ou prático"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fery: {
@@ -4650,7 +4723,7 @@ const dict = {
                     "órgão"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fglu: {
@@ -4661,7 +4734,7 @@ const dict = {
                     "universal"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fhlo: {
@@ -4672,7 +4745,7 @@ const dict = {
                     "faz-tudo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fini: {
@@ -4691,7 +4764,7 @@ const dict = {
                     "único"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "nofy",
@@ -4706,7 +4779,7 @@ const dict = {
                     "bebida alcoólica"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         flar: {
@@ -4721,7 +4794,7 @@ const dict = {
                     "semelhante"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         flei: {
@@ -4736,7 +4809,7 @@ const dict = {
                     "aparelho de som (para captura de som)"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         flix: {
@@ -4749,7 +4822,7 @@ const dict = {
                     "animal"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         floi: {
@@ -4762,7 +4835,7 @@ const dict = {
                     "ansioso"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         flui: {
@@ -4776,7 +4849,7 @@ const dict = {
                     "causa"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fout: {
@@ -4798,7 +4871,7 @@ const dict = {
                     "fechado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fouk: {
@@ -4817,7 +4890,7 @@ const dict = {
                     "passagem"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fpra: {
@@ -4827,7 +4900,7 @@ const dict = {
                     "contato"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fpri: {
@@ -4850,7 +4923,7 @@ const dict = {
                     "contato"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "decku",
@@ -4869,7 +4942,19 @@ const dict = {
                 {
                     phrase: "ue tue nifrav",
                     message: {
-                        br: "eu (sou) / (tenho um(a)) (órgão do sexo feminino)"
+                        br: [
+                            "eu sou mulher",
+                            "eu tenho (um órgão do sexo feminino)"
+                        ]
+                    }
+                },
+                {
+                    phrase: "ue tue nafrav",
+                    message: {
+                        br: [
+                            "eu sou homem",
+                            "eu tenho (um órgão do sexo masculino)"
+                        ]
                     }
                 }
             ],
@@ -4885,19 +4970,25 @@ const dict = {
                 {
                     phrase: "nifraq",
                     message: {
-                        br: "interessado em sexo feminino (homossexual ou hétero dependendo do sujeito)"
+                        br: [
+                            "interessado em sexo feminino (homossexual ou hétero dependendo do sujeito)"
+                        ]
                     }
                 },
                 {
                     phrase: "nafraq",
                     message: {
-                        br: "interessado em sexo masculino (homossexual ou hétero dependendo do sujeito)"
+                        br: [
+                            "interessado em sexo masculino (homossexual ou hétero dependendo do sujeito)"
+                        ]
                     }
                 },
                 {
                     phrase: "fraq",
                     message: {
-                        br: "interessado em qualquer sexo ou indefinido"
+                        br: [
+                            "interessado em qualquer sexo ou indefinido"
+                        ]
                     }
                 }
             ],
@@ -4915,7 +5006,7 @@ const dict = {
                     "o que não se quer perto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         frea: {
@@ -4926,7 +5017,7 @@ const dict = {
                     "couro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         frex: {
@@ -4938,7 +5029,7 @@ const dict = {
                     "faz parte de sua equipe pessoal"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         froc: {
@@ -4953,7 +5044,7 @@ const dict = {
                     "comum"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         frot: {
@@ -4969,7 +5060,7 @@ const dict = {
                     "machucado de queimar (tanto emocional quanto real)"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fruf: {
@@ -4985,7 +5076,7 @@ const dict = {
                     "armadura mística ou especial que te mantém protegido"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ftik: {
@@ -5000,7 +5091,7 @@ const dict = {
                     "obrigado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ftuk: {
@@ -5010,7 +5101,7 @@ const dict = {
                     "hambúrguer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fual: {
@@ -5035,7 +5126,7 @@ const dict = {
                     "destaque entre outros"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fuil: {
@@ -5058,7 +5149,7 @@ const dict = {
                     "em perfeitas condições"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "knep"
@@ -5079,7 +5170,7 @@ const dict = {
                     "responsável"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         fytu: {
@@ -5102,7 +5193,7 @@ const dict = {
                     "ausente"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gale: {
@@ -5119,7 +5210,7 @@ const dict = {
                     "porta",
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "rwes"
@@ -5147,7 +5238,7 @@ const dict = {
                     "na calma"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "furku"
@@ -5173,7 +5264,7 @@ const dict = {
                     "destaque entre outros"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "fual"
@@ -5195,7 +5286,7 @@ const dict = {
                     "modelo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gdaj: {
@@ -5217,7 +5308,9 @@ const dict = {
                 {
                     phrase: "ae tue gdaj",
                     message: {
-                        br: "você está \"precisando de ajuda\""
+                        br: [
+                            "você está \"precisando de ajuda\""
+                        ]
                     }
                 }
             ],
@@ -5232,7 +5325,7 @@ const dict = {
                     "pai"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         geft: {
@@ -5253,7 +5346,7 @@ const dict = {
                     "relevante"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "klai",
@@ -5275,7 +5368,7 @@ const dict = {
                     "novo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gfoh: {
@@ -5298,7 +5391,7 @@ const dict = {
                     "nesse momento"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "grah"
@@ -5319,7 +5412,7 @@ const dict = {
                     "cidade-estado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ghit: {
@@ -5340,7 +5433,7 @@ const dict = {
                     "vistoriado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gleh: {
@@ -5355,7 +5448,7 @@ const dict = {
                     "líquido (estado da matéria)"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         glut: {
@@ -5370,7 +5463,7 @@ const dict = {
                     "equipe"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         goto: {
@@ -5394,7 +5487,7 @@ const dict = {
                     "origem de trabalho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         graf: {
@@ -5416,7 +5509,7 @@ const dict = {
                     "inclusive"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "klin",
@@ -5436,7 +5529,7 @@ const dict = {
                     "na hora"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         grak: {
@@ -5446,7 +5539,7 @@ const dict = {
                     "verme"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         grin: {
@@ -5456,7 +5549,7 @@ const dict = {
                     "violão elétrico"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gren: {
@@ -5469,7 +5562,7 @@ const dict = {
                     "gera som por vibrações"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gron: {
@@ -5478,7 +5571,7 @@ const dict = {
                     "utilize => abdku"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         grug: {
@@ -5491,7 +5584,7 @@ const dict = {
                     "profundo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gruy: {
@@ -5502,7 +5595,7 @@ const dict = {
                     "felino selvagem"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         guni: {
@@ -5512,7 +5605,7 @@ const dict = {
                     "sugestão"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gura: {
@@ -5522,7 +5615,7 @@ const dict = {
                     "esfera"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gure: {
@@ -5532,7 +5625,7 @@ const dict = {
                     "notícia"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gyla: {
@@ -5542,7 +5635,7 @@ const dict = {
                     "movimento"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         gyth: {
@@ -5551,7 +5644,7 @@ const dict = {
                     "chocolate"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         hugi: {
@@ -5561,7 +5654,7 @@ const dict = {
                     "matéria"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         hune: {
@@ -5570,7 +5663,7 @@ const dict = {
                     "casamento"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         hung: {
@@ -5579,7 +5672,7 @@ const dict = {
                     "sal"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         hute: {
@@ -5588,7 +5681,7 @@ const dict = {
                     "casa"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         huti: {
@@ -5597,7 +5690,7 @@ const dict = {
                     "ânus"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         huty: {
@@ -5608,7 +5701,7 @@ const dict = {
                     "espaço (de médio tamanho, para uma casa ou poucas casas)"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         huwg: {
@@ -5619,7 +5712,7 @@ const dict = {
                     "fezes"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         hyor: {
@@ -5628,7 +5721,7 @@ const dict = {
                     "rua"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         iata: {
@@ -5638,7 +5731,7 @@ const dict = {
                     "topo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         iceb: {
@@ -5647,7 +5740,7 @@ const dict = {
                     "cebola"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         igrn: {
@@ -5656,7 +5749,7 @@ const dict = {
                     "veado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ihgl: {
@@ -5665,7 +5758,7 @@ const dict = {
                     "inglês"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ilpe: {
@@ -5674,7 +5767,7 @@ const dict = {
                     "caldo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         issu: {
@@ -5683,7 +5776,7 @@ const dict = {
                     "calcanhar"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         isti: {
@@ -5692,7 +5785,7 @@ const dict = {
                     "ovíparo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         isto: {
@@ -5701,7 +5794,7 @@ const dict = {
                     "herbívoro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         itep: {
@@ -5711,7 +5804,7 @@ const dict = {
                     "orégano"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         jfab: {
@@ -5720,7 +5813,7 @@ const dict = {
                     "faculdade"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         jiak: {
@@ -5734,7 +5827,7 @@ const dict = {
                     "tamanho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         jolo: {
@@ -5748,7 +5841,7 @@ const dict = {
                     "bastante"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         joqe: {
@@ -5757,7 +5850,7 @@ const dict = {
                     "joystick"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         julk: {
@@ -5766,7 +5859,7 @@ const dict = {
                     "foda"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kaet: {
@@ -5776,7 +5869,7 @@ const dict = {
                     "pobreza"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kaga: {
@@ -5786,7 +5879,7 @@ const dict = {
                     "shopping"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kaka: {
@@ -5795,7 +5888,7 @@ const dict = {
                     "atrevido"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kala: {
@@ -5804,7 +5897,7 @@ const dict = {
                     "caramba"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kara: {
@@ -5813,7 +5906,7 @@ const dict = {
                     "loucura"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kark: {
@@ -5822,7 +5915,7 @@ const dict = {
                     "atualização"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kefh: {
@@ -5832,7 +5925,7 @@ const dict = {
                     "tio"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kerk: {
@@ -5841,7 +5934,7 @@ const dict = {
                     "desatualização"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kina: {
@@ -5850,7 +5943,7 @@ const dict = {
                     "vegetal"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kini: {
@@ -5860,7 +5953,7 @@ const dict = {
                     "caso"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kjor: {
@@ -5872,7 +5965,7 @@ const dict = {
                     "senhoria"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         klai: {
@@ -5884,7 +5977,7 @@ const dict = {
                     "chave"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         klan: {
@@ -5894,7 +5987,7 @@ const dict = {
                     "time"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         klet: {
@@ -5903,7 +5996,7 @@ const dict = {
                     "barriga"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         klin: {
@@ -5913,7 +6006,7 @@ const dict = {
                     "tchau"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         knap: {
@@ -5924,7 +6017,7 @@ const dict = {
                     "perfeccionista"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         knep: {
@@ -5938,7 +6031,7 @@ const dict = {
                     "realidade"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         knet: {
@@ -5947,7 +6040,7 @@ const dict = {
                     "série"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         knyh: {
@@ -5957,7 +6050,7 @@ const dict = {
                     "luta"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kral: {
@@ -5968,7 +6061,7 @@ const dict = {
                     "descontrolado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         krat: {
@@ -5977,7 +6070,7 @@ const dict = {
                     "problema"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         krfi: {
@@ -5986,7 +6079,7 @@ const dict = {
                     "favor"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         krka: {
@@ -5995,7 +6088,7 @@ const dict = {
                     "preso"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kruk: {
@@ -6004,7 +6097,7 @@ const dict = {
                     "tradução"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ktra: {
@@ -6013,7 +6106,7 @@ const dict = {
                     "entre"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ktuh: {
@@ -6022,7 +6115,7 @@ const dict = {
                     "atenção"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kuil: {
@@ -6031,7 +6124,7 @@ const dict = {
                     "saúde"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kuky: {
@@ -6040,7 +6133,7 @@ const dict = {
                     "céu"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kulh: {
@@ -6049,7 +6142,7 @@ const dict = {
                     "máquina"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kurp: {
@@ -6058,7 +6151,7 @@ const dict = {
                     "inútil"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kwyh: {
@@ -6068,7 +6161,7 @@ const dict = {
                     "quarto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kyek: {
@@ -6077,7 +6170,7 @@ const dict = {
                     "mendigo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kyia: {
@@ -6087,7 +6180,7 @@ const dict = {
                     "olá"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         kyna: {
@@ -6096,7 +6189,7 @@ const dict = {
                     "porra"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lala: {
@@ -6108,7 +6201,7 @@ const dict = {
                     "picolé"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         larb: {
@@ -6117,7 +6210,7 @@ const dict = {
                     "trabalhador"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lara: {
@@ -6126,7 +6219,7 @@ const dict = {
                     "fruta"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lare: {
@@ -6135,7 +6228,7 @@ const dict = {
                     "alguém"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lari: {
@@ -6145,7 +6238,7 @@ const dict = {
                     "alguma"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lark: {
@@ -6154,7 +6247,7 @@ const dict = {
                     "ocupado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         layw: {
@@ -6166,7 +6259,7 @@ const dict = {
                     "forro",
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lhun: {
@@ -6175,7 +6268,7 @@ const dict = {
                     "pulso"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lide: {
@@ -6184,7 +6277,7 @@ const dict = {
                     "ímã"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lifu: {
@@ -6194,7 +6287,7 @@ const dict = {
                     "desmotivado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         liit: {
@@ -6204,7 +6297,7 @@ const dict = {
                     "inverno"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         liku: {
@@ -6216,7 +6309,7 @@ const dict = {
                     "outrora"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lili: {
@@ -6225,7 +6318,7 @@ const dict = {
                     "riso"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lily: {
@@ -6234,7 +6327,7 @@ const dict = {
                     "sorriso"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         limy: {
@@ -6244,7 +6337,7 @@ const dict = {
                     "bolacha"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lint: {
@@ -6253,7 +6346,7 @@ const dict = {
                     "língua"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         liuf: {
@@ -6264,7 +6357,7 @@ const dict = {
                     "triste"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         liuk: {
@@ -6275,7 +6368,7 @@ const dict = {
                     "terrível"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lofh: {
@@ -6285,7 +6378,7 @@ const dict = {
                     "madrinha"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lofi: {
@@ -6294,7 +6387,7 @@ const dict = {
                     "branco"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lohp: {
@@ -6303,7 +6396,7 @@ const dict = {
                     "trás"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         loht: {
@@ -6314,7 +6407,7 @@ const dict = {
                     "frente"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lokl: {
@@ -6323,7 +6416,7 @@ const dict = {
                     "acaso"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lokt: {
@@ -6333,7 +6426,7 @@ const dict = {
                     "pra"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         loku: {
@@ -6342,7 +6435,7 @@ const dict = {
                     "osso"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lolk: {
@@ -6354,7 +6447,7 @@ const dict = {
                     "por"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lolo: {
@@ -6363,7 +6456,7 @@ const dict = {
                     "ovo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lope: {
@@ -6379,7 +6472,7 @@ const dict = {
                     "tela"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "fruf",
@@ -6392,7 +6485,7 @@ const dict = {
                     "deus"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lowe: {
@@ -6401,7 +6494,7 @@ const dict = {
                     "universidade"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lual: {
@@ -6410,7 +6503,7 @@ const dict = {
                     "viagem"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         luka: {
@@ -6419,7 +6512,7 @@ const dict = {
                     "perna"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         luly: {
@@ -6428,7 +6521,7 @@ const dict = {
                     "semente"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lumu: {
@@ -6438,7 +6531,7 @@ const dict = {
                     "livro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lung: {
@@ -6447,7 +6540,7 @@ const dict = {
                     "ombro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         luph: {
@@ -6456,7 +6549,7 @@ const dict = {
                     "coxa"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lurd: {
@@ -6466,7 +6559,7 @@ const dict = {
                     "longe"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lure: {
@@ -6476,7 +6569,7 @@ const dict = {
                     "inteligente"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         luyo: {
@@ -6485,7 +6578,7 @@ const dict = {
                     "dragão"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lyka: {
@@ -6494,7 +6587,7 @@ const dict = {
                     "reino"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lyru: {
@@ -6503,7 +6596,7 @@ const dict = {
                     "feio"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         lyvo: {
@@ -6513,7 +6606,7 @@ const dict = {
                     "fútil"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         maly: {
@@ -6523,7 +6616,7 @@ const dict = {
                     "texto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         maah: {
@@ -6533,7 +6626,7 @@ const dict = {
                     "claro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         maeh: {
@@ -6542,7 +6635,7 @@ const dict = {
                     "certeza "
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         mana: {
@@ -6552,7 +6645,7 @@ const dict = {
                     "incerto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         mank: {
@@ -6564,7 +6657,7 @@ const dict = {
                     "a-"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         maol: {
@@ -6574,7 +6667,7 @@ const dict = {
                     "portanto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         medy: {
@@ -6584,7 +6677,7 @@ const dict = {
                     "médico"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         mhat: {
@@ -6593,7 +6686,7 @@ const dict = {
                     "matemática"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         mhut: {
@@ -6603,7 +6696,7 @@ const dict = {
                     "estável"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         molg: {
@@ -6612,7 +6705,7 @@ const dict = {
                     "macarrão"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         molh: {
@@ -6622,7 +6715,7 @@ const dict = {
                     "vaca"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         muka: {
@@ -6636,13 +6729,21 @@ const dict = {
                 {
                     phrase: "ohde muka ohde",
                     message: {
-                        br: "1.1, um vírgula um, um 'ponto' um"
+                        br: [
+                            "1.1",
+                            "um vírgula um",
+                            "um 'ponto' um"
+                        ]
                     }
                 },
                 {
                     phrase: "muka qute mula troe qute",
                     message: {
-                        br: "0.40004, zero vírgula quarenta mil e quatro, quatro 'zeros vezes' três quatro"
+                        br: [
+                            "0.40004",
+                            "zero vírgula quarenta mil e quatro",
+                            "quatro 'zeros vezes' três quatro"
+                        ]
                     }
                 }
             ],
@@ -6652,20 +6753,28 @@ const dict = {
             message: {
                 br: [
                     "multiplicador",
-                    "(indicador de potência de 10, verifique exemplos)",
+                    "(indicador de potência de 10, verifique exemplos)"
                 ]
             },
             examples: [
                 {
                     phrase: "ohde mula ohde",
                     message: {
-                        br: "10, dez, um 'zeros vezes' um"
+                        br: [
+                            "10",
+                            "dez",
+                            "um 'zeros vezes' um"
+                        ]
                     }
                 },
                 {
                     phrase: "qute troe mula troe ohde muka ohde uhso ohde",
                     message: {
-                        br: "430001.101, quatrocentos e trinta mil e um vírgula um zero um, quatro três 'zeros vezes' três um 'ponto' um zero um"
+                        br: [
+                            "430001.101",
+                            "quatrocentos e trinta mil e um vírgula um zero um",
+                            "quatro três 'zeros vezes' três um 'ponto' um zero um"
+                        ]
                     }
                 },
             ],
@@ -6682,7 +6791,7 @@ const dict = {
                     "entretanto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "sari"
@@ -6695,7 +6804,7 @@ const dict = {
                     "tarefa"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nagt: {
@@ -6704,7 +6813,7 @@ const dict = {
                     "estresse"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nape: {
@@ -6718,7 +6827,7 @@ const dict = {
                     "só"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "nofy"
@@ -6732,7 +6841,7 @@ const dict = {
                     "configuração"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nheh: {
@@ -6741,7 +6850,7 @@ const dict = {
                     "igreja"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nhoe: {
@@ -6750,7 +6859,7 @@ const dict = {
                     "nove"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nhum: {
@@ -6759,7 +6868,7 @@ const dict = {
                     "sorte"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nili: {
@@ -6768,7 +6877,7 @@ const dict = {
                     "frase "
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         njvn: {
@@ -6777,7 +6886,7 @@ const dict = {
                     "alho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         noag: {
@@ -6786,7 +6895,7 @@ const dict = {
                     "batata"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nofy: {
@@ -6799,7 +6908,7 @@ const dict = {
                     "único"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nolc: {
@@ -6809,7 +6918,7 @@ const dict = {
                     "sem"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nuki: {
@@ -6818,7 +6927,7 @@ const dict = {
                     "coitado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nukn: {
@@ -6827,7 +6936,7 @@ const dict = {
                     "colaboração"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nune: {
@@ -6836,7 +6945,7 @@ const dict = {
                     "fluente"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nury: {
@@ -6846,7 +6955,7 @@ const dict = {
                     "para sempre"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nyht: {
@@ -6858,7 +6967,7 @@ const dict = {
                     "este"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nyil: {
@@ -6867,7 +6976,7 @@ const dict = {
                     "pior"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         nyta: {
@@ -6877,7 +6986,7 @@ const dict = {
                     "químico"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         oaut: {
@@ -6886,7 +6995,7 @@ const dict = {
                     "espelho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ohde: {
@@ -6896,7 +7005,7 @@ const dict = {
                     "uma"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ohte: {
@@ -6905,7 +7014,7 @@ const dict = {
                     "oito"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         olal: {
@@ -6921,7 +7030,7 @@ const dict = {
                     "às"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         olar: {
@@ -6932,7 +7041,7 @@ const dict = {
                     "dicionário"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         oloj: {
@@ -6944,7 +7053,7 @@ const dict = {
                     "pouco"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         otsi: {
@@ -6953,7 +7062,7 @@ const dict = {
                     "carnívoro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         otun: {
@@ -6963,7 +7072,7 @@ const dict = {
                     "músico"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ougt: {
@@ -6972,7 +7081,7 @@ const dict = {
                     "olho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         oyye: {
@@ -6981,7 +7090,7 @@ const dict = {
                     "loiro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ozuk: {
@@ -6990,7 +7099,7 @@ const dict = {
                     "onda"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pane: {
@@ -6999,7 +7108,7 @@ const dict = {
                     "próton"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pate: {
@@ -7009,7 +7118,7 @@ const dict = {
                     "árvore"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         paut: {
@@ -7018,7 +7127,7 @@ const dict = {
                     "caralho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pedt: {
@@ -7028,7 +7137,7 @@ const dict = {
                     "último"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         penk: {
@@ -7044,7 +7153,7 @@ const dict = {
                     "mentira"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         phaf: {
@@ -7054,7 +7163,7 @@ const dict = {
                     "farmácia"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         phed: {
@@ -7064,7 +7173,7 @@ const dict = {
                     "imagem"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         phlo: {
@@ -7073,7 +7182,7 @@ const dict = {
                     "alto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         phoa: {
@@ -7082,7 +7191,7 @@ const dict = {
                     "fone"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         phor: {
@@ -7091,7 +7200,7 @@ const dict = {
                     "português"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         phuf: {
@@ -7100,7 +7209,7 @@ const dict = {
                     "cotovelada"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         phus: {
@@ -7109,7 +7218,7 @@ const dict = {
                     "física"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pitn: {
@@ -7118,7 +7227,7 @@ const dict = {
                     "nariz"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pikt: {
@@ -7127,7 +7236,7 @@ const dict = {
                     "alicate"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         plar: {
@@ -7136,7 +7245,7 @@ const dict = {
                     "trabalho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         plep: {
@@ -7146,7 +7255,7 @@ const dict = {
                     "cafeína"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         plek: {
@@ -7162,7 +7271,7 @@ const dict = {
                     "elétrico"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "trat"
@@ -7174,7 +7283,7 @@ const dict = {
                     "responsável"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         plug: {
@@ -7183,7 +7292,7 @@ const dict = {
                     "pulsação"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         poad: {
@@ -7192,7 +7301,7 @@ const dict = {
                     "massa"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         poag: {
@@ -7201,7 +7310,7 @@ const dict = {
                     "manteiga"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         podr: {
@@ -7210,7 +7319,7 @@ const dict = {
                     "capô"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pody: {
@@ -7220,7 +7329,7 @@ const dict = {
                     "pé"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pofh: {
@@ -7229,7 +7338,7 @@ const dict = {
                     "chute"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         poje: {
@@ -7238,7 +7347,7 @@ const dict = {
                     "padre"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pola: {
@@ -7247,7 +7356,7 @@ const dict = {
                     "saco"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pole: {
@@ -7258,7 +7367,7 @@ const dict = {
                     "pixel"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         polh: {
@@ -7267,7 +7376,7 @@ const dict = {
                     "joelhada"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         polt: {
@@ -7276,7 +7385,7 @@ const dict = {
                     "lábio"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         poly: {
@@ -7296,7 +7405,7 @@ const dict = {
                     "chute"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "pofh"
@@ -7308,7 +7417,7 @@ const dict = {
                     "bebida"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pora: {
@@ -7317,7 +7426,7 @@ const dict = {
                     "futebol"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pote: {
@@ -7328,7 +7437,7 @@ const dict = {
                     "janela"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         potr: {
@@ -7337,7 +7446,7 @@ const dict = {
                     "penal"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pous: {
@@ -7346,7 +7455,7 @@ const dict = {
                     "sopa"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         praf: {
@@ -7356,7 +7465,7 @@ const dict = {
                     "pediatria"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pred: {
@@ -7365,7 +7474,7 @@ const dict = {
                     "som"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         proe: {
@@ -7375,7 +7484,7 @@ const dict = {
                     "conector"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         prud: {
@@ -7389,7 +7498,7 @@ const dict = {
                     "embaralhado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ptha: {
@@ -7398,7 +7507,7 @@ const dict = {
                     "plástico"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ptos: {
@@ -7407,7 +7516,7 @@ const dict = {
                     "geralmente"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ptuf: {
@@ -7417,7 +7526,7 @@ const dict = {
                     "aro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         puag: {
@@ -7426,7 +7535,7 @@ const dict = {
                     "margarina"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pulh: {
@@ -7435,7 +7544,7 @@ const dict = {
                     "porco"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         pury: {
@@ -7450,7 +7559,7 @@ const dict = {
                     "alugado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         qene: {
@@ -7459,7 +7568,7 @@ const dict = {
                     "quente"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         qnad: {
@@ -7468,7 +7577,7 @@ const dict = {
                     "quando"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         qute: {
@@ -7477,7 +7586,7 @@ const dict = {
                     "quatro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         qwut: {
@@ -7487,7 +7596,7 @@ const dict = {
                     "malandro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         raki: {
@@ -7496,7 +7605,7 @@ const dict = {
                     "guerra"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         raih: {
@@ -7505,7 +7614,7 @@ const dict = {
                     "assim"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         raik: {
@@ -7514,7 +7623,7 @@ const dict = {
                     "martelo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rara: {
@@ -7528,7 +7637,7 @@ const dict = {
                     "temperado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rauk: {
@@ -7537,7 +7646,7 @@ const dict = {
                     "sonho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         raut: {
@@ -7548,7 +7657,7 @@ const dict = {
                     "peste"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         regh: {
@@ -7557,7 +7666,7 @@ const dict = {
                     "relógio"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         reka: {
@@ -7566,7 +7675,7 @@ const dict = {
                     "aqui"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         reko: {
@@ -7575,7 +7684,7 @@ const dict = {
                     "rumo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rela: {
@@ -7584,7 +7693,7 @@ const dict = {
                     "ali"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         relo: {
@@ -7596,7 +7705,7 @@ const dict = {
                     "estrada"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         relh: {
@@ -7605,7 +7714,7 @@ const dict = {
                     "avestruz"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rhfa: {
@@ -7614,7 +7723,7 @@ const dict = {
                     "rádio"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rhis: {
@@ -7623,7 +7732,7 @@ const dict = {
                     "história"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rifn: {
@@ -7632,7 +7741,7 @@ const dict = {
                     "cabelo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ripy: {
@@ -7641,7 +7750,7 @@ const dict = {
                     "perigo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rirt: {
@@ -7653,7 +7762,7 @@ const dict = {
                     "preto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rote: {
@@ -7662,7 +7771,7 @@ const dict = {
                     "filme"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         roti: {
@@ -7671,7 +7780,7 @@ const dict = {
                     "remoto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ruka: {
@@ -7681,7 +7790,7 @@ const dict = {
                     "régua"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ruky: {
@@ -7690,7 +7799,7 @@ const dict = {
                     "alavanca"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rury: {
@@ -7699,7 +7808,7 @@ const dict = {
                     "tipo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rutu: {
@@ -7708,7 +7817,7 @@ const dict = {
                     "desenho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         rwes: {
@@ -7717,7 +7826,7 @@ const dict = {
                     "porta"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ryke: {
@@ -7727,7 +7836,7 @@ const dict = {
                     "porcaria"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ryty: {
@@ -7737,7 +7846,7 @@ const dict = {
                     "menu"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         saan: {
@@ -7746,7 +7855,7 @@ const dict = {
                     "bolado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sadu: {
@@ -7755,7 +7864,7 @@ const dict = {
                     "separado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         saki: {
@@ -7764,7 +7873,7 @@ const dict = {
                     "paz"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         salu: {
@@ -7774,7 +7883,7 @@ const dict = {
                     "curso"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         saqi: {
@@ -7783,7 +7892,7 @@ const dict = {
                     "idade"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sari: {
@@ -7795,7 +7904,7 @@ const dict = {
                     "todavia"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sase: {
@@ -7804,7 +7913,7 @@ const dict = {
                     "total"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sele: {
@@ -7813,7 +7922,7 @@ const dict = {
                     "nem"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         shie: {
@@ -7822,7 +7931,7 @@ const dict = {
                     "ciências"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         skaa: {
@@ -7831,7 +7940,7 @@ const dict = {
                     "janeiro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         skab: {
@@ -7840,7 +7949,7 @@ const dict = {
                     "fevereiro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         skac: {
@@ -7849,7 +7958,7 @@ const dict = {
                     "março"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         skad: {
@@ -7858,7 +7967,7 @@ const dict = {
                     "abril"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         skae: {
@@ -7867,7 +7976,7 @@ const dict = {
                     "maio"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         skaf: {
@@ -7876,7 +7985,7 @@ const dict = {
                     "junho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         skag: {
@@ -7885,7 +7994,7 @@ const dict = {
                     "julho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         skah: {
@@ -7894,7 +8003,7 @@ const dict = {
                     "agosto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         skai: {
@@ -7903,7 +8012,7 @@ const dict = {
                     "setembro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         skaj: {
@@ -7912,7 +8021,7 @@ const dict = {
                     "outubro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         skak: {
@@ -7921,7 +8030,7 @@ const dict = {
                     "novembro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         skal: {
@@ -7930,7 +8039,7 @@ const dict = {
                     "dezembro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         skra: {
@@ -7939,7 +8048,7 @@ const dict = {
                     "imbecil"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         slag: {
@@ -7948,7 +8057,7 @@ const dict = {
                     "salgado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sleg: {
@@ -7957,7 +8066,7 @@ const dict = {
                     "cera"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         smug: {
@@ -7966,7 +8075,7 @@ const dict = {
                     "cigarro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         snag: {
@@ -7978,7 +8087,7 @@ const dict = {
                     "ciclismo"                    
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         snop: {
@@ -7988,7 +8097,7 @@ const dict = {
                     "nunca"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         snuz: {
@@ -7997,7 +8106,7 @@ const dict = {
                     "cama"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sofy: {
@@ -8007,7 +8116,7 @@ const dict = {
                     "filósofo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         spet: {
@@ -8016,7 +8125,7 @@ const dict = {
                     "sombra"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         spot: {
@@ -8025,7 +8134,7 @@ const dict = {
                     "sempre"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         srag: {
@@ -8034,7 +8143,7 @@ const dict = {
                     "frango"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         srak: {
@@ -8043,7 +8152,7 @@ const dict = {
                     "dada"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sret: {
@@ -8052,7 +8161,7 @@ const dict = {
                     "faxina"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         stor: {
@@ -8061,7 +8170,7 @@ const dict = {
                     "host"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sufe: {
@@ -8070,7 +8179,7 @@ const dict = {
                     "sete"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         suff: {
@@ -8081,7 +8190,7 @@ const dict = {
                     "de novo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         suft: {
@@ -8090,7 +8199,7 @@ const dict = {
                     "suco"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sufy: {
@@ -8101,7 +8210,7 @@ const dict = {
                     "diabo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sulu: {
@@ -8110,7 +8219,7 @@ const dict = {
                     "diferente"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         sute: {
@@ -8119,7 +8228,7 @@ const dict = {
                     "seis"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         swag: {
@@ -8128,7 +8237,7 @@ const dict = {
                     "servidor"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         swap: {
@@ -8142,7 +8251,7 @@ const dict = {
                     "agora"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "grah"
@@ -8157,7 +8266,7 @@ const dict = {
                     "planta"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         swen: {
@@ -8166,7 +8275,7 @@ const dict = {
                     "preguiçoso"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         swyn: {
@@ -8175,7 +8284,7 @@ const dict = {
                     "forma"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tahi: {
@@ -8185,7 +8294,7 @@ const dict = {
                     "solução"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tart: {
@@ -8194,7 +8303,7 @@ const dict = {
                     "estalactite"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         taek: {
@@ -8203,7 +8312,7 @@ const dict = {
                     "estado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tdod: {
@@ -8212,7 +8321,7 @@ const dict = {
                     "tomate"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         teak: {
@@ -8222,7 +8331,7 @@ const dict = {
                     "riqueza"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tofh: {
@@ -8232,7 +8341,7 @@ const dict = {
                     "irmã"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tohd: {
@@ -8244,7 +8353,7 @@ const dict = {
                     "cada"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tops: {
@@ -8253,7 +8362,7 @@ const dict = {
                     "vez"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         topt: {
@@ -8263,7 +8372,7 @@ const dict = {
                     "legal"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         topk: {
@@ -8273,7 +8382,7 @@ const dict = {
                     "chato"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tort: {
@@ -8282,7 +8391,7 @@ const dict = {
                     "hoje"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         totr: {
@@ -8291,7 +8400,7 @@ const dict = {
                     "amanhã"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tpos: {
@@ -8300,7 +8409,7 @@ const dict = {
                     "raramente"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         trar: {
@@ -8309,7 +8418,7 @@ const dict = {
                     "estalagmite"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         trat: {
@@ -8319,7 +8428,7 @@ const dict = {
                     "elétrico"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         trie: {
@@ -8328,7 +8437,7 @@ const dict = {
                     "século"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         trir: {
@@ -8337,7 +8446,7 @@ const dict = {
                     "dia"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         troa: {
@@ -8346,7 +8455,7 @@ const dict = {
                     "morno"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         troe: {
@@ -8355,7 +8464,7 @@ const dict = {
                     "três"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         trot: {
@@ -8364,7 +8473,7 @@ const dict = {
                     "ontem"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         trta: {
@@ -8378,7 +8487,7 @@ const dict = {
                     "se"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         true: {
@@ -8387,7 +8496,7 @@ const dict = {
                     "forte"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         trui: {
@@ -8396,7 +8505,7 @@ const dict = {
                     "computador"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         trur: {
@@ -8405,7 +8514,7 @@ const dict = {
                     "lado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         trus: {
@@ -8418,7 +8527,7 @@ const dict = {
                     "bacia"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         trut: {
@@ -8428,7 +8537,7 @@ const dict = {
                     "esquerdo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         turt: {
@@ -8438,7 +8547,7 @@ const dict = {
                     "direito"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tute: {
@@ -8447,7 +8556,7 @@ const dict = {
                     "cérebro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tuti: {
@@ -8456,7 +8565,7 @@ const dict = {
                     "amigo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         tyrr: {
@@ -8466,7 +8575,7 @@ const dict = {
                     "momento"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uadu: {
@@ -8476,7 +8585,7 @@ const dict = {
                     "unido"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uhfu: {
@@ -8485,7 +8594,7 @@ const dict = {
                     "joelho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uhle: {
@@ -8495,7 +8604,7 @@ const dict = {
                     "suporte"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uhly: {
@@ -8504,7 +8613,7 @@ const dict = {
                     "mesa"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uhno: {
@@ -8513,7 +8622,7 @@ const dict = {
                     "estômago"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uhpe: {
@@ -8522,7 +8631,7 @@ const dict = {
                     "baleia"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uhso: {
@@ -8531,7 +8640,7 @@ const dict = {
                     "zero"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uhtr: {
@@ -8546,7 +8655,7 @@ const dict = {
                     "relógio"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "regh"
@@ -8558,7 +8667,7 @@ const dict = {
                     "fácil"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ulus: {
@@ -8567,7 +8676,7 @@ const dict = {
                     "igual"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         unmu: {
@@ -8576,7 +8685,7 @@ const dict = {
                     "mão"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uolo: {
@@ -8585,7 +8694,7 @@ const dict = {
                     "arroz"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         urno: {
@@ -8594,7 +8703,7 @@ const dict = {
                     "intestino"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         uviu: {
@@ -8603,7 +8712,7 @@ const dict = {
                     "peixe"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         varu: {
@@ -8612,7 +8721,7 @@ const dict = {
                     "lobo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         valk: {
@@ -8621,7 +8730,7 @@ const dict = {
                     "queijo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         vest: {
@@ -8630,7 +8739,7 @@ const dict = {
                     "leite "
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         waag: {
@@ -8639,7 +8748,7 @@ const dict = {
                     "louça"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         waki: {
@@ -8649,7 +8758,7 @@ const dict = {
                     "jovem"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wala: {
@@ -8658,7 +8767,7 @@ const dict = {
                     "palavra"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wany: {
@@ -8667,7 +8776,7 @@ const dict = {
                     "criança"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         warq: {
@@ -8676,7 +8785,7 @@ const dict = {
                     "dedo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         witi: {
@@ -8687,7 +8796,7 @@ const dict = {
                     "carinhosamente"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         woka: {
@@ -8696,7 +8805,7 @@ const dict = {
                     "outro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wuag: {
@@ -8705,7 +8814,7 @@ const dict = {
                     "aula"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wuha: {
@@ -8716,7 +8825,7 @@ const dict = {
                     "sangue"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wuhp: {
@@ -8725,7 +8834,7 @@ const dict = {
                     "super"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wuje: {
@@ -8734,7 +8843,7 @@ const dict = {
                     "quem"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wuky: {
@@ -8743,7 +8852,7 @@ const dict = {
                     "adolescência"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wune: {
@@ -8752,7 +8861,7 @@ const dict = {
                     "onde"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wuni: {
@@ -8761,7 +8870,7 @@ const dict = {
                     "infância"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wupe: {
@@ -8770,7 +8879,7 @@ const dict = {
                     "qual"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wuqa: {
@@ -8779,7 +8888,7 @@ const dict = {
                     "pergunta"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wuqe: {
@@ -8789,7 +8898,7 @@ const dict = {
                     "qualquer"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wush: {
@@ -8798,7 +8907,7 @@ const dict = {
                     "academia"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wusu: {
@@ -8807,7 +8916,7 @@ const dict = {
                     "relação"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         wuyh: {
@@ -8817,7 +8926,7 @@ const dict = {
                     "intensivo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yair: {
@@ -8826,7 +8935,7 @@ const dict = {
                     "família"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yaye: {
@@ -8835,7 +8944,7 @@ const dict = {
                     "água "
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yayu: {
@@ -8844,7 +8953,7 @@ const dict = {
                     "vida"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yela: {
@@ -8853,7 +8962,7 @@ const dict = {
                     "laranja"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yelo: {
@@ -8862,7 +8971,7 @@ const dict = {
                     "marrom"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yemo: {
@@ -8871,7 +8980,7 @@ const dict = {
                     "memória"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yepo: {
@@ -8880,7 +8989,7 @@ const dict = {
                     "verde"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yeur: {
@@ -8889,7 +8998,7 @@ const dict = {
                     "inscrito"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yhrn: {
@@ -8900,7 +9009,7 @@ const dict = {
                     "inclusive"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yloy: {
@@ -8909,7 +9018,7 @@ const dict = {
                     "cenoura"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yuoa: {
@@ -8921,7 +9030,7 @@ const dict = {
                     "torrado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ymer: {
@@ -8930,7 +9039,7 @@ const dict = {
                     "vídeo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yohu: {
@@ -8940,7 +9049,7 @@ const dict = {
                     "caixa"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yoio: {
@@ -8949,7 +9058,7 @@ const dict = {
                     "roxo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yoiu: {
@@ -8958,7 +9067,7 @@ const dict = {
                     "vermelho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yolo: {
@@ -8967,7 +9076,7 @@ const dict = {
                     "azul"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yomu: {
@@ -8976,7 +9085,7 @@ const dict = {
                     "cartão"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yopo: {
@@ -8985,7 +9094,7 @@ const dict = {
                     "turquesa"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yopu: {
@@ -8994,7 +9103,7 @@ const dict = {
                     "dourado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         youn: {
@@ -9005,7 +9114,7 @@ const dict = {
                     "salsicha"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         youo: {
@@ -9014,7 +9123,7 @@ const dict = {
                     "bege"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         youp: {
@@ -9023,7 +9132,7 @@ const dict = {
                     "prata"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yout: {
@@ -9032,7 +9141,7 @@ const dict = {
                     "jeito"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yoyo: {
@@ -9041,7 +9150,7 @@ const dict = {
                     "aparelho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yoyu: {
@@ -9051,7 +9160,7 @@ const dict = {
                     "telefone"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yrui: {
@@ -9060,7 +9169,7 @@ const dict = {
                     "sono"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yryr: {
@@ -9070,7 +9179,7 @@ const dict = {
                     "invasor"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ytre: {
@@ -9079,7 +9188,7 @@ const dict = {
                     "bissexto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         ytyr: {
@@ -9088,7 +9197,7 @@ const dict = {
                     "fim"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yuiu: {
@@ -9097,7 +9206,7 @@ const dict = {
                     "amarelo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yumu: {
@@ -9108,7 +9217,7 @@ const dict = {
                     "textura"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yuno: {
@@ -9117,7 +9226,7 @@ const dict = {
                     "braço"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yupo: {
@@ -9126,7 +9235,7 @@ const dict = {
                     "moreno"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yuuh: {
@@ -9135,7 +9244,7 @@ const dict = {
                     "cinza"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         zuyh: {
@@ -9144,7 +9253,7 @@ const dict = {
                     "sentido"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         zold: {
@@ -9154,7 +9263,7 @@ const dict = {
                     "velocímetro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yort: {
@@ -9163,7 +9272,7 @@ const dict = {
                     "rosa"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
         yopy: {
@@ -9172,7 +9281,7 @@ const dict = {
                     "foca"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null
         },
 
@@ -9181,6 +9290,33 @@ const dict = {
 
 
 
+        wue: {
+            obsolete: true,
+            old_message: {
+                br: [
+                    "amassar",
+                    "amocar"
+                ]
+            },
+            examples: null,
+            variants: null,
+            replacements: [
+                "koy"
+            ]
+        },
+        dea: {
+            obsolete: true,
+            old_message: {
+                br: [
+                    "achar"
+                ]
+            },
+            examples: null,
+            variants: null,
+            replacements: [
+                "dec"
+            ]
+        },
         grye: {
             obsolete: true,
             old_message: {
@@ -9195,7 +9331,7 @@ const dict = {
                     "assustado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "gkuku"
@@ -9208,7 +9344,7 @@ const dict = {
                     "banho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "byhku"
@@ -9221,7 +9357,7 @@ const dict = {
                     "amor"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "uyoku"
@@ -9234,7 +9370,7 @@ const dict = {
                     "frente"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "loht"
@@ -9248,7 +9384,7 @@ const dict = {
                     "macho"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "nakjor"
@@ -9262,7 +9398,7 @@ const dict = {
                     "mulher"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "nikjor"
@@ -9275,7 +9411,7 @@ const dict = {
                     "menina"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "niwany"
@@ -9288,7 +9424,7 @@ const dict = {
                     "menino"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "nawany"
@@ -9301,7 +9437,7 @@ const dict = {
                     "irmã"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "nitofh"
@@ -9314,7 +9450,7 @@ const dict = {
                     "aquilo"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "wa"
@@ -9331,7 +9467,7 @@ const dict = {
                     "águia"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "egka"
@@ -9348,7 +9484,7 @@ const dict = {
                     "águia"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "egka"
@@ -9361,7 +9497,7 @@ const dict = {
                     "pai"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "nagefh"
@@ -9374,7 +9510,7 @@ const dict = {
                     "preto"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "rirt"
@@ -9387,7 +9523,7 @@ const dict = {
                     "madrinha"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "nilofh"
@@ -9400,7 +9536,7 @@ const dict = {
                     "deus"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "lopk"
@@ -9414,7 +9550,7 @@ const dict = {
                     "escuro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "rirt"
@@ -9429,7 +9565,7 @@ const dict = {
                     "maior"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "jolo"
@@ -9445,7 +9581,7 @@ const dict = {
                     "realidade"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "knep"
@@ -9461,7 +9597,7 @@ const dict = {
                     "gay"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "fraq"
@@ -9475,7 +9611,7 @@ const dict = {
                     "outro"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "woka"
@@ -9488,7 +9624,7 @@ const dict = {
                     "tu"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "ae"
@@ -9502,7 +9638,7 @@ const dict = {
                     "tua"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "ea"
@@ -9515,7 +9651,7 @@ const dict = {
                     "nunca"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "snop"
@@ -9528,7 +9664,7 @@ const dict = {
                     "ou"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "muna"
@@ -9542,7 +9678,7 @@ const dict = {
                     "uma"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "ohde"
@@ -9567,7 +9703,7 @@ const dict = {
                     "a verdade pura"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "eneku",
@@ -9585,7 +9721,7 @@ const dict = {
                     "ainda"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "graf"
@@ -9612,7 +9748,7 @@ const dict = {
                     "descontrolado"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "hycku",
@@ -9635,7 +9771,7 @@ const dict = {
                     "dez (multiplicador ou singular)"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "mula"
@@ -9648,7 +9784,7 @@ const dict = {
                     "cem"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "mula"
@@ -9663,7 +9799,7 @@ const dict = {
                     "fator"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "mula"
@@ -9678,7 +9814,7 @@ const dict = {
                     "multiplicador"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "mula"
@@ -9693,7 +9829,7 @@ const dict = {
                     "multiplicador"
                 ]
             },
-            examples: [],
+            examples: null,
             variants: null,
             replacements: [
                 "mula"
