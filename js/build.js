@@ -18,6 +18,7 @@ function main()
     delay_autocancel_event_of(window, "scroll", scroll_handler, 100);
     setInterval(scroll_handler, 5000);
     scroll_handler();
+    fill_up_combined_word_if_not_empty();
 }
 
 function reset_page()
@@ -30,6 +31,7 @@ function reset_page()
     hide_on_search.classList.remove("lsw-hide");
     lines_loaded = 0;
     scroll_handler();
+    fill_up_combined_word_if_not_empty();
 }
 
 
@@ -49,6 +51,7 @@ function _tie_search_to_put_result()
             source_lines = dict.Search(search_el.value);
             lines_loaded = 0;
             scroll_handler();
+            fill_up_combined_word_if_not_empty();
 
             return;
         }
@@ -56,7 +59,43 @@ function _tie_search_to_put_result()
         // else restore default:
         reset_page();
     }, 500);
+}
 
+function fill_up_combined_word_if_not_empty()
+{
+    const root = document.getElementById("show_on_combined_word");
+
+    if (source_lines?.deconstructed_word?.prefixes?.length > 0 ||
+        source_lines?.deconstructed_word?.suffixes?.length > 0) {
+        root.classList.remove("lsw-hide");
+    } else {
+        root.classList.add("lsw-hide");
+        return;
+    }
+
+    const base = document.getElementById("base-word");
+    const prefixes = document.getElementById("prefixes-word");
+    const suffixes = document.getElementById("suffixes-word");
+
+    function make_pair(key, val) {
+        const p = document.createElement("p");
+        const span = document.createElement("span");
+
+        p.classList.add("lsw-low_indent");
+        span.classList.add("lsw-bold");
+        span.innerText = key + ": ";
+        p.appendChild(span);
+        p.appendChild(document.createTextNode(val));
+        return p;
+    }
+
+    base.innerHTML = "";
+    prefixes.innerHTML = "";
+    suffixes.innerHTML = "";
+    
+    base.appendChild(make_pair("Palavra base", source_lines.deconstructed_word.base));
+    prefixes.appendChild(make_pair("Prefixos", source_lines.deconstructed_word.prefixes.flatMap(e => e?.[lang_sel]).join(", ") || "nenhum"));
+    suffixes.appendChild(make_pair("Sufixos", source_lines.deconstructed_word.suffixes.flatMap(e => e?.[lang_sel]).join(", ") || "nenhum"));
 }
 
 function _load_wotd_and_random_word_search()
@@ -137,9 +176,4 @@ function delay_autocancel_event_of(element, event_type, fcn, time_delay)
         if (ev_id) clearTimeout(ev_id);
         element[`__ev_fcn_${event_type}_id`] = setTimeout(function(){ fcn(ev); }, time_delay);
     });
-}
-
-function create_dict_elements(of_dict_val)
-{
-    const dict_obj = (typeof of_dict_val === 'number') ? dict.GetIndex(of_dict_val) : dict.Search(of_dict_val);
 }

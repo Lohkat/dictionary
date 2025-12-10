@@ -699,10 +699,10 @@ const dict = {
     _SearchLarinuim: function(word) {
         const res = {
             perfect_matches: [],
-            other_cases: []
+            other_cases: [],
+            deconstructed_word: affixes.DeconstructWord(word)
         };
 
-        const deconstructed_word = affixes.DeconstructWord(word);
 
         const base_names = Object.keys(this.data).map(function(k){ return {key: k, src: {[k]: dict.data[k]}, old_or_replacement: false} });
         const variants = [];
@@ -725,10 +725,10 @@ const dict = {
             }
         });
 
-        const found_base = base_names.filter(each => each.key.indexOf(deconstructed_word.base) !== -1);
-        const found_variants = variants.filter(each => each.key.indexOf(deconstructed_word.base) !== -1);
-        const found_old_variants = old_variants.filter(each => each.key.indexOf(deconstructed_word.base) !== -1);
-        const found_replacements = replacements.filter(each => each.key.indexOf(deconstructed_word.base) !== -1);
+        const found_base = base_names.filter(each => each.key.indexOf(res.deconstructed_word.base) !== -1);
+        const found_variants = variants.filter(each => each.key.indexOf(res.deconstructed_word.base) !== -1);
+        const found_old_variants = old_variants.filter(each => each.key.indexOf(res.deconstructed_word.base) !== -1);
+        const found_replacements = replacements.filter(each => each.key.indexOf(res.deconstructed_word.base) !== -1);
 
         const found = [...new Map([...found_base, ...found_variants, ...found_old_variants, ...found_replacements].map(item => [item.key, item])).values()];
 
@@ -820,7 +820,8 @@ const dict = {
 
         return {
             perfect_matches: perfect_matches,
-            other_cases: other_cases
+            other_cases: other_cases,
+            deconstructed_word: larinuim.deconstructed_word
         };
     },
 
