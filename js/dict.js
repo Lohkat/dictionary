@@ -775,8 +775,18 @@ const dict = {
             const self_messages = self.message?.[lang_sel]?.filter(msg => msg.indexOf(message) !== -1).flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: false }; }) || [];
             const self_old_messages = self.old_message?.[lang_sel].filter(msg => msg.indexOf(message) !== -1).flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: true }; }) || [];
 
+            const examples_phrases_match = self.examples?.filter(ex => ex.phrase.indexOf(message) !== -1).flatMap(function(ex){ return {key: ex.phrase, src: {[k]: self}, old_or_replacement: false }; }) || [];
+            const any_variant_match = Object.values(self.variants ?? {}).flatMap(e => e.message?.[lang_sel]).filter(msg => msg.indexOf(message) !== -1).flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: false }; }) || [];
+
+            const old_examples_phrases_match = self.old_examples?.filter(ex => ex.phrase.indexOf(message) !== -1).flatMap(function(ex){ return {key: ex.phrase, src: {[k]: self}, old_or_replacement: true }; }) || [];
+            const old_any_variant_match = Object.values(self.old_variants ?? {}).flatMap(e => e.message?.[lang_sel]).filter(msg => msg.indexOf(message) !== -1).flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: true }; }) || [];
+
             if (self_messages.length) found_raw.push(...self_messages);
             if (self_old_messages.length) found_raw.push(...self_old_messages);
+            if (examples_phrases_match.length) found_raw.push(...examples_phrases_match);
+            if (any_variant_match.length) found_raw.push(...any_variant_match);
+            if (old_examples_phrases_match.length) found_raw.push(...old_examples_phrases_match);
+            if (old_any_variant_match.length) found_raw.push(...old_any_variant_match);
         });
 
         const found = [...new Map([...found_raw].map(item => [item.key, item])).values()];
@@ -1132,12 +1142,31 @@ const dict = {
                     "desfazer",
                     "cancelar",
                     "atrasar",
+                    "tardar",
                     "retornar",
                     "devolver"
                 ]
             },
             examples: null,
-            variants: null
+            variants: {
+                awfku: {
+                    message: {
+                        br: [
+                            "recuperação",
+                            "conserto",
+                            "correção",
+                            "desfazimento",
+                            "cancelamento",
+                            "atraso",
+                            "tardança",
+                            "tarde",
+                            "retorno",
+                            "devolução",
+                            "rescisão"
+                        ]
+                    }
+                }
+            }
         },
         bak: {
             message: {
@@ -3477,11 +3506,26 @@ const dict = {
         wum: {
             message: {
                 br: [
-                    "acordar"
+                    "acordar",
+                    "amanhecer",
+                    "alvorecer",
+                    "madrugar"
                 ]
             },
             examples: null,
-            variants: null
+            variants: {
+                wumku: {
+                    message: {
+                        br: [
+                            "acordado",
+                            "amanhecido",
+                            "alvorecido",
+                            "madrugada",
+                            "madrugado"
+                        ]
+                    }
+                }
+            }
         },
         wyt: {
             message: {
@@ -8397,7 +8441,8 @@ const dict = {
         totr: {
             message: {
                 br: [
-                    "amanhã"
+                    "amanhã",
+                    "manhã"
                 ]
             },
             examples: null,
