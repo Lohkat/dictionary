@@ -2353,7 +2353,8 @@ const dict = {
                 br: [
                     "esconder",
                     "desaparecer",
-                    "sumir"
+                    "sumir",
+                    "fugir"
                 ]
             },
             examples: null,
@@ -3522,7 +3523,28 @@ const dict = {
                             "amanhecido",
                             "alvorecido",
                             "madrugada",
-                            "madrugado"
+                            "madrugado",
+                            "manhã"
+                        ]
+                    }
+                },
+                "mank wum": {
+                    message: {
+                        br: [
+                            "desacordado",
+                            "anoitecido",
+                            "anoitecer",
+                            "crepuscular"
+                        ]
+                    }
+                },
+                "mank wumku": {
+                    message: {
+                        br: [
+                            "desacordado",
+                            "anoitecido",
+                            "crepúsculo",
+                            "noite"
                         ]
                     }
                 }
@@ -6709,7 +6731,8 @@ const dict = {
             message: {
                 br: [
                     "então",
-                    "portanto"
+                    "portanto",
+                    "ou"
                 ]
             },
             examples: null,
@@ -8442,12 +8465,19 @@ const dict = {
         totr: {
             message: {
                 br: [
-                    "amanhã",
+                    "amanhã"
+                ]
+            },
+            old_message: {
+                br: [
                     "manhã"
                 ]
             },
             examples: null,
-            variants: null
+            variants: null,
+            replacements: [
+                "wumku"
+            ]
         },
         tpos: {
             message: {
