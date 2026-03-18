@@ -257,7 +257,180 @@ const dict = {
 
             // Make itself a HTML object
             self["toHTML"] = function(title_search_append) {
-                function create_list_of_array(arr, classes_base, id, show) {
+                const is_match = !title_search_append || title_search_append === k;
+
+                const root =  document.createElement("div");
+                const title = document.createElement("span");
+                const buttons = document.createElement("div");
+                const detail = document.createElement("div");
+                const obsolete = self.obsolete; //!(self.message?.[lang_sel]?.length > 0 && !self.obsolete);
+
+                root.classList.add("action-card");
+                if (obsolete) root.classList.add("invalid");
+                else if (is_match !== true) root.classList.add("minimalist");
+
+                title.classList.add("title");
+
+                buttons.classList.add("buttons");
+
+                detail.classList.add("detail");
+
+                title.textContent = is_match ? `${k}` : `${k} - ${lang_sel === "br" ? "como" : "as"} '${title_search_append}'`;
+
+                for(let i = 0; i < 6; ++i) buttons.appendChild(document.createElement("button"));
+
+                switch(lang_sel) {
+                case "br":
+                    buttons.children[0].setAttribute("title", "traduções");
+                    buttons.children[1].setAttribute("title", "exemplos");
+                    buttons.children[2].setAttribute("title", "traduções antigas");
+                    buttons.children[3].setAttribute("title", "variações");
+                    buttons.children[4].setAttribute("title", "variações antigas");
+                    buttons.children[5].setAttribute("title", "substituído por");
+                    break;
+                case "us":
+                    buttons.children[0].setAttribute("title", "translations");
+                    buttons.children[1].setAttribute("title", "examples");
+                    buttons.children[2].setAttribute("title", "old translations");
+                    buttons.children[3].setAttribute("title", "variations");
+                    buttons.children[4].setAttribute("title", "old variations");
+                    buttons.children[5].setAttribute("title", "replaced by");
+                    break;
+                }
+
+                buttons.children[0].textContent = "📗";
+                buttons.children[1].textContent = "📖";
+                buttons.children[2].textContent = "📕";
+                buttons.children[3].textContent = "🌟";
+                buttons.children[4].textContent = "⭐";
+                buttons.children[5].textContent = "🔄";
+
+                root.appendChild(title);
+                root.appendChild(buttons);
+                root.appendChild(detail);
+
+                const msgs      = self.message?.[lang_sel];
+                const msgs_old  = self.old_message?.[lang_sel];
+                const vars      = Object.keys(self.variants || {}).flatMap(function(vr){ return {key: vr, val: self.variants[vr].message?.[lang_sel]};});
+                const vars_old  = Object.keys(self.old_variants || {}).flatMap(function(vr){ return {key: vr, val: self.old_variants[vr].message?.[lang_sel]};});
+                const exs       = self.examples?.flatMap(function(vr){return {key: vr.phrase, val: vr.message?.[lang_sel]}; });
+                const repl      = self.replacements;
+
+                function simple_list_el(of) {
+                    detail.innerHTML = "";
+
+                    if (!of || of.length === 0) {
+                        detail.textContent = lang_sel === "br" ? "<nada>" : "<empty>";
+                        return;
+                    }
+
+                    const ul = document.createElement("ul");
+                    for(let i = 0; i < of.length; ++i) {
+                        const li = document.createElement("li");
+                        li.textContent = of[i];
+                        li.setAttribute("dot", "↪ ");
+                        ul.appendChild(li);
+                    }
+                    detail.appendChild(ul);
+                };
+
+                function list_of_keyed_lists(of) {
+                    detail.innerHTML = "";
+
+                    if (!of || of.length === 0) {
+                        detail.textContent = lang_sel === "br" ? "<nada>" : "<empty>";
+                        return;
+                    }
+
+                    const ul = document.createElement("ul");
+                    for(let i = 0; i < of.length; ++i) {
+                        const ex = of[i];
+
+                        const li = document.createElement("li");
+                        const div = document.createElement("div");
+
+                        li.setAttribute("dot", "");
+
+                        li.appendChild(div);
+                        ul.appendChild(li);
+
+                        const span = document.createElement("span");
+                        span.textContent = "↪ " + ex.key;
+
+                        div.appendChild(span);
+
+                        const sul = document.createElement("ul");
+                        sul.style.marginLeft = "1rem";
+
+                        div.appendChild(sul);
+
+                        for(let j = 0; j < ex.val.length; ++j) {
+                            const val = ex.val[j];
+                            const lili = document.createElement("li");
+
+                            lili.textContent = val;
+                            lili.setAttribute("dot", `${j + 1}. `);
+
+                            sul.appendChild(lili);
+                        }
+                        
+                    }
+                    detail.appendChild(ul);
+                }
+
+                function unselectAll() {
+                    for(let i = 0; i < buttons.children.length; ++i)
+                        buttons.children[i].classList.remove("enabled");
+                }
+
+                buttons.children[0].addEventListener("click", function() { // messages
+                    simple_list_el(msgs);
+                    unselectAll();
+                    buttons.children[0].classList.add("enabled");
+                });
+
+                buttons.children[1].addEventListener("click", function() { // examples
+                    list_of_keyed_lists(exs);
+                    unselectAll();
+                    buttons.children[1].classList.add("enabled");
+                });
+
+                buttons.children[2].addEventListener("click", function() { // old messages
+                    simple_list_el(msgs_old);
+                    unselectAll();
+                    buttons.children[2].classList.add("enabled");
+                });
+
+                buttons.children[3].addEventListener("click", function() { // variations
+                    list_of_keyed_lists(vars);
+                    unselectAll();
+                    buttons.children[3].classList.add("enabled");
+                });
+
+                buttons.children[4].addEventListener("click", function() { // old variations
+                    list_of_keyed_lists(vars_old);
+                    unselectAll();
+                    buttons.children[4].classList.add("enabled");
+                });
+
+                buttons.children[5].addEventListener("click", function() { // replaced by
+                    simple_list_el(repl);
+                    unselectAll();
+                    buttons.children[5].classList.add("enabled");
+                });
+
+                
+                setTimeout(function() {
+                    buttons.children[obsolete ? 5 : 0].click();
+                }, 10);
+
+                return root;
+
+
+
+
+
+                /*function create_list_of_array(arr, classes_base, id, show) {
                     if (!arr || arr.length <= 0) return null;
                     if (arr.length === 1 && arr[0].val == null) return null;
                     
@@ -489,7 +662,7 @@ const dict = {
                 base.appendChild(div_selector);
                 base.appendChild(desc_div);
 
-                return base;
+                return base;*/
             };
 
             // self check if it is built correctly. Returns string if error, null if nothing wrong
@@ -772,14 +945,14 @@ const dict = {
         Object.keys(this.data).forEach(k => {
             const self = dict.data[k];
 
-            const self_messages = self.message?.[lang_sel]?.filter(msg => msg.indexOf(message) !== -1).flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: false }; }) || [];
-            const self_old_messages = self.old_message?.[lang_sel].filter(msg => msg.indexOf(message) !== -1).flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: true }; }) || [];
+            const self_messages = self.message?.[lang_sel]?.filter(msg => msg && msg?.indexOf(message) !== -1)?.flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: false }; }) || [];
+            const self_old_messages = self.old_message?.[lang_sel]?.filter(msg => msg && msg?.indexOf(message) !== -1)?.flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: true }; }) || [];
 
-            const examples_phrases_match = self.examples?.filter(ex => ex.phrase.indexOf(message) !== -1).flatMap(function(ex){ return {key: ex.phrase, src: {[k]: self}, old_or_replacement: false }; }) || [];
-            const any_variant_match = Object.values(self.variants ?? {}).flatMap(e => e.message?.[lang_sel]).filter(msg => msg.indexOf(message) !== -1).flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: false }; }) || [];
+            const examples_phrases_match = self.examples?.filter(ex => ex.phrase.indexOf(message) !== -1)?.flatMap(function(ex){ return {key: ex.phrase, src: {[k]: self}, old_or_replacement: false }; }) || [];
+            const any_variant_match = Object.values(self.variants ?? {}).flatMap(e => e.message?.[lang_sel])?.filter(msg => msg && msg && msg?.indexOf(message) !== -1)?.flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: false }; }) || [];
 
-            const old_examples_phrases_match = self.old_examples?.filter(ex => ex.phrase.indexOf(message) !== -1).flatMap(function(ex){ return {key: ex.phrase, src: {[k]: self}, old_or_replacement: true }; }) || [];
-            const old_any_variant_match = Object.values(self.old_variants ?? {}).flatMap(e => e.message?.[lang_sel]).filter(msg => msg.indexOf(message) !== -1).flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: true }; }) || [];
+            const old_examples_phrases_match = self.old_examples?.filter(ex => ex.phrase.indexOf(message) !== -1)?.flatMap(function(ex){ return {key: ex.phrase, src: {[k]: self}, old_or_replacement: true }; }) || [];
+            const old_any_variant_match = Object.values(self.old_variants ?? {}).flatMap(e => e.message?.[lang_sel])?.filter(msg => msg && msg?.indexOf(message) !== -1)?.flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: true }; }) || [];
 
             if (self_messages.length) found_raw.push(...self_messages);
             if (self_old_messages.length) found_raw.push(...self_old_messages);
