@@ -9,442 +9,444 @@
     <meta charset="utf-8">
     <meta http-equiv="content-language" content="pt-br">
     <meta name="author" content="Lohkdesgds Hangi Lhuminury">
-    <meta name="description" content="Lohk's">
+    <meta name="description" content="Lohk's Nest">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="icon" type="image/x-icon" href="images/favicon.png">
+    <link rel="icon" type="image/x-icon" href="/images/icons/dict.png">
     
     <title>Larinuim Dictionary</title>
 
-    <link rel="stylesheet" href="/deps/css/default.css">
-    <link rel="stylesheet" href="/deps/css/alignment.css">
-    <link rel="stylesheet" href="/deps/css/classes.css">
-
-    <link rel="stylesheet" href="css/dictionary.css">
+    <link rel="stylesheet" href="/deps/css/standard.css">
+    <script type="text/javascript" src="/deps/js/standard.js" defer></script>
 </head>
 <body>
-    <header>
-        <div class="b-flex b-row b-between">
-            <h1 class="f-avali c-center_h c-clickable" onclick="location.href = 'index.html';">Larinuim Dictionary!</h1>
-            <div class="c-center_h">
-                <button onclick="location.href = 'lore_br.html';">🇺🇸 US (WIP!)</button>
+    <button class="toggle-dark-mode" state="white"></button>
+    <button class="go-home"></button>
+
+    <section class="ybottom xcenter" style="padding-bottom: 1rem; background-color: var(--bg2-color);">
+        <div type="center-header">
+            <br type="normal" />
+            <h1 class="f-avali highlight" onclick="location.href = 'index.html';">Larinuim Dictionary</h1>
+            <h4>Larinuim Dictionary</h4>
+
+            <br type="large"/>
+
+            <input style="width: 65%;" placeholder="Search..." id="search-box"/>
+        </div>
+    </section>
+
+    <section class="ybottom xcenter main"><div type="block">            
+            <div id="mark-historia">
+                <a href="#mark-historia"><h2>History</h2></a>
+            
+                <p>
+                    This language was created by a user known as Lohk in 2009.
+                    Initially, its name was Lohkdesgds, but it was later changed
+                    because the name ended up being used as his username in games
+                    and social networks rather than linked to the language.
+                </p>
+                <p>
+                    In the beginning, the goal of the project was to have the ultimate language
+                    that no teacher could decipher and that students could use to talk
+                    across corners of the classroom. If it were original, there would be no issue
+                    if the teacher intercepted a note, since they wouldn't understand a thing.
+                </p>
+                <p>
+                    In the same year, the basic rules for constructing the language were defined
+                    and the first tests were conducted. Unfortunately, the reception was
+                    terrible, and the language fell into disuse a few days after being created.
+                </p>
+                <p>
+                    Today, this file lists the latest updates since 2009. The data
+                    here remains up to date, as Lohk still uses it every now and
+                    then, so this language will probably never die.
+                </p>
+                <p>
+                    Lohk's message to everyone reading this file is as follows:
+                    found a word you'd like to use that doesn't have a translation yet?
+                    Send a message on Discord (<span class="italic">@lohk</span>)
+                    or Twitter (<span class="italic">@lohkdesgds</span>). An
+                    update should probably come out within a few days.
+                </p>
+                <p>
+                    If many people collaborate, we will probably have a more complete
+                    language one day. It is flexible and currently only adapted or expanded
+                    by Lohk himself. Who knows, maybe one day we'll have enough people
+                    to make that happen?
+                </p>
+            
+            </div>
+            
+            <br type="large" />
+            
+            <div id="mark-escrita">
+                <a href="#mark-escrita"><h2>Writing</h2></a>
+            
+                <p>
+                    There is great interest in an official way to write in this language.
+                    To make it easier to use, the standard chosen was the US keyboard layout,
+                    containing letters from A to Z, but a valid font is also
+                    <span class="italic">Avali Scratch</span> (you can change the font
+                    at the top of the page).
+                </p>
+                <p>
+                    The format of the <span class="italic">Avali Scratch</span> font is quite
+                    interesting, as it is mostly based on strokes, so for some it might even
+                    be faster and easier to write (besides looking much more unique).
+                </p>
+                <p>
+                    Compare the fonts in the example below or by toggling them at the top of the page.
+                    Accented letters are not naturally used in this language, but if you want to use
+                    the font in Portuguese or another language, part of it was implemented by me, as
+                    demonstrated with <span class="italic">À Á Â Ä Ã</span>.
+                </p>
+                
+                <section type="sub">
+                    <div>
+                        <p>
+                            A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+                        </p>
+                        <p>
+                            0 1 2 3 4 5 6 7 8 9 . , ; : ~ " ' _ - = + | ( ) [ ] Ç À Á Â Ä Ã
+                        </p>
+                    </div>
+                    <div class="f-avali">
+                        <p>
+                            A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+                        </p>
+                        <p>
+                            0 1 2 3 4 5 6 7 8 9 . , ; : ~ " ' _ - = + | ( ) [ ] Ç À Á Â Ä Ã
+                        </p>
+                    </div>
+                </section>
+                
+                <p>
+                    For now, this is the most distinct and accessible font found for this purpose.
+                    Perhaps in the future an original font will be used for this language.
+                </p>
+            
+            </div>
+            
+            <br type="large" />
+            
+            <div id="mark-regras_uso">
+                <a href="#mark-regras_uso"><h2>Basic rules of use</h2></a>
+            
+                <p>
+                    This language has a few simple and easy-to-remember rules:
+                </p>
+                
+                <section type="sub">
+                    <ul>
+                        <li dot="1.">
+                            Pronouns always have two letters;
+                        </li>            
+                        <li dot="2.">
+                            Verbs will have three letters for the root, and 5 or 7 when conjugated or with a modifier;
+                        </li>
+                        <li dot="3.">
+                            General words usually have 4 letters and can have 6 in some cases;
+                        </li>
+                        <li dot="4.">
+                            The "inverse" or "opposite" of a word (like the prefix "un-" or "dis-", or "des-"
+                            in Portuguese, as in "undo") can be literally obtained by putting "inverse", or 
+                            <italic>"mank"</italic>, before the word. It's a simple way of speaking,
+                            though it might not be obvious at first if you aren't used to it. Example:
+                            <italic>"mank krk"</italic>: to un-update ("opposite update").
+                        </li>
+                        <li dot="5.">
+                            Both "?" and "wu" can be used to highlight a question ("wu" makes it
+                            clearer when speaking that it is a question).
+                            Example: <span class="italic">"Wu ae tue fuil?"</span>;
+                        </li>
+                        <li dot="6.">
+                            Generally, word order does not matter as long as idea blocks
+                            (groups of verbs and words that make sense together) stay together.
+                            Example: <span class="italic">"Ue tue fuil"</span> / 
+                            <span class="italic">"Fuil ue tue"</span> /
+                            <span class="italic">"Tue fuil ue"</span>.
+                            However, <span class="bold">SVO</span> (subject + verb + object) is preferred.
+                        </li>
+                    </ul>
+                </section>                    
+            
+                <p>
+                    For pronunciation, the rules are also simple:
+                </p>
+            
+                <section type="sub">
+                    <ul>
+                        <li dot="1.">
+                            In general, reading sounds like a mix of Portuguese, English, and German;
+                        </li>
+                        <li dot="2.">
+                            Y always sounds like "ai" (like "eye");
+                        </li>
+                        <li dot="3.">
+                            Q without a vowel in front or at the end has a sound similar to
+                            <span class="italic">queue</span> or <span class="italic">quack</span>
+                            (in English, the "qu" part). When followed by a vowel, it sounds like the "c" in "cat", "cot"...;
+                        </li>
+                        <li dot="4.">
+                            C always sounds like Q without a vowel—that is, like
+                            <span class="italic">queue</span> or <span class="italic">quack</span> (the
+                            "qu" part in English);
+                        </li>
+                        <li dot="5.">
+                            K without a vowel in front or at the end of words becomes "kah". In other situations,
+                            it sounds like the "c" in "cat", "cot"...;
+                        </li>
+                        <li dot="6.">
+                            H tends to extend the previous vowel as if breathy (or, if there is no
+                            vowel, the general consonant rule below applies). Starting with H,
+                            it tends to sound like a soft R sound, like in <span class="italic">"ruRal"</span>;
+                        </li>
+                        <li dot="7.">
+                            W tends to sound like an "oo" (almost muted), not a strong "oo", reminiscent
+                            of the "wh" in the English word <span class="italic">WHat</span>;
+                        </li>
+                        <li dot="8.">
+                            G always has a soft "g" sound (like "gê" / soft "j"; e.g., "ga" sounds like "zha" / Portuguese "já");
+                        </li>
+                        <li dot="9.">
+                            J always has a hard "g" sound ("ji" sounds like "gee" in "geese" or "gui" in Portuguese);
+                        </li>
+                        <li dot="10.">
+                            X always sounds like "ks", similar to the "x" in Netfli<span class="italic">X</span>.
+                            With vowels, it sounds like <span class="italic">"kss"</span>.
+                        </li>
+                        <li dot="11.">
+                            In general, consonants without vowels tend to carry a short neutral vowel sound attached (close to an "eh" sound).
+                        </li>            
+                    </ul>
+                </section>
+            
+                <p>
+                    For constructing words and verbs, we follow this format:
+                </p>
+            
+                <section type="sub">
+                    <ol>
+                        <li dot="1. ">
+                            <span class="bold">GENDER-WORD-MAGNITUDE</span>
+                            <ol class="c-tab">
+                                <li dot="a. ">
+                                    Plural (optional): <span class="bold">WORD + WORD</span> (repeats the word).
+                                </li>
+                                <li dot="b. ">
+                                    GENDERS (optional):
+                                    <ol class="c-tab">
+                                        <li dot="i. ">
+                                            <span class="bold">NI</span>: feminine;
+                                        </li>
+                                        <li dot="ii. ">
+                                            <span class="bold">NA</span>: masculine.
+                                        </li>
+                                    </ol>   
+                                </li>
+                                <li dot="c. ">
+                                    MAGNITUDE (optional, sometimes repeatable for emphasis or multiplier):
+                                    <ol class="c-tab">
+                                        <li dot="i. ">
+                                            <span class="bold">XI</span>: diminutive;
+                                        </li>
+                                        <li dot="ii. ">
+                                            <span class="bold">XA</span>: augmentative.
+                                        </li>
+                                    </ol>   
+                                </li>
+                            </ol>
+                        </li>
+                        <li dot="2. ">
+                            <span class="bold">PRONOUN - VERB - (TENSE</span> or <span class="bold">MODIFIER) - MAGNITUDE</span>
+                            <ol class="c-tab">
+                                <li dot="a. ">
+                                    TENSES (optional for present tense):
+                                    <ol class="c-tab">
+                                        <li dot="i. ">
+                                            <span class="bold">PA</span>: past;
+                                        </li>
+                                        <li dot="ii. ">
+                                            <span class="bold">FA</span>: future;
+                                        </li>
+                                        <li dot="iii. ">
+                                            <span class="bold">GA</span>: gerund/continuous;
+                                        </li>
+                                        <li dot="iv. ">
+                                            <span class="bold">LA</span>: participle.
+                                        </li>
+                                    </ol>   
+                                </li>
+                                <li dot="b. ">
+                                    MODIFIER (optional):
+                                    <ol class="c-tab">
+                                        <li dot="i. ">
+                                            <span class="bold">KU</span>: nominalizer (convert to noun).
+                                        </li>
+                                    </ol>   
+                                </li>
+                                <li dot="c. ">
+                                    MAGNITUDE (optional, sometimes repeatable for emphasis or multiplier):
+                                    <ol class="c-tab">
+                                        <li dot="i. ">
+                                            <span class="bold">XI</span>: diminutive;
+                                        </li>
+                                        <li dot="ii. ">
+                                            <span class="bold">XA</span>: augmentative.
+                                        </li>
+                                    </ol>   
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
+                </section>
+                    
+                <p>
+                    <span class="bold">Gender</span> in a word is optional, especially since not all words
+                    require it. You can make gender clear through sentence context. In older texts,
+                    you can still see the "meaning direction" suffix at the end (two letters), but it has
+                    currently fallen into disuse (<span class="italic">AW</span> for opposite meaning,
+                    <span class="italic">OP</span> for double opposite meaning, and <span class="italic">AP</span>
+                    for triple opposite meaning).
+                </p>
+                <p>
+                    The <span class="bold">pronoun</span> attached to the verb is basically the subject, and 
+                    <span class="bold">tense</span> is the verb tense. Both are optional and function
+                    similarly to Portuguese grammar.
+                </p>
+                <p>
+                    All words can be "compacted" if the boundary letters are the same, such as 
+                    <span class="italic">"def'ury"</span> which is <span class="italic">"def fury"</span>.
+                    The pronunciation remains the same as when uncompacted.
+                </p>
+                <p>
+                    <span class="bold">Verbs</span> can be directly nominalized without issues. A standalone verb
+                    that doesn't make sense in a sentence like <span class="italic">"Ai tue ena"</span> means
+                    <span class="italic">"This is applicable"</span> instead of <span class="italic">"to apply"</span>
+                    (which wouldn't make sense). <span class="bold">However</span>, to make it clearer,
+                    <span class="bold">it is recommended</span> to use the modifier <span class="italic">"ku"</span>,
+                    resulting in <span class="italic">"Ai tue enaku"</span>. Regarding augmentatives and diminutives, you can
+                    append <span class="italic">"xi"</span> or <span class="italic">"xa"</span> to the end of a word or verb, for
+                    example <span class="italic">"uyokuxa"</span> (big love / deep love).
+                </p>
+            
+            </div>
+            
+            <br type="large" />
+            
+            <div id="mark-pronomes">
+                <a href="#mark-pronomes"><h2>Pronouns</h2></a>
+            
+                <p>
+                    Personal pronouns are very easy to use. It boils down to standard personal pronouns with one additional concept:
+                </p>
+            
+                <section type="sub">
+                    <ul>
+                        <li>
+                            <span class="bold">Ue</span>: I / me;
+                        </li>
+                        <li>
+                            <span class="bold">Ae</span>: you (singular, person spoken to, close by / next to me);
+                        </li>
+                        <li>
+                            <span class="bold">Pe</span>: he/she/you (external, or addressing someone distant / far away);
+                        </li>
+                        <li>
+                            <span class="bold">Ua</span>: we / us (all inclusive);
+                        </li>
+                        <li>
+                            <span class="bold">Sa</span>: we / us (exclusive: speaker and their group addressing another group not included);
+                        </li>
+                        <li>
+                            <span class="bold">Va</span>: you (plural, close by within a small radius, inclusive);
+                        </li>
+                        <li>
+                            <span class="bold">Ka</span>: they / them (external or distant);
+                        </li>            
+                    </ul>
+                </section>
+                    
+                <p>
+                    The cool part comes now: possessive pronouns (and others) are basically the personal pronouns, but reversed! So it's easy and intuitive.
+                </p>
+
+                <section type="sub">
+                    <ul>
+                        <li>
+                            <span class="bold">Eu</span>: my, mine, me;
+                        </li>
+                        <li>
+                            <span class="bold">Ea</span>: your, yours (singular, here, nearby);
+                        </li>
+                        <li>
+                            <span class="bold">Ep</span>: your, his, her, its (singular, distant, belonging to that far away person);
+                        </li>
+                        <li>
+                            <span class="bold">Au</span>: our, ours (inclusive of everyone);
+                        </li>
+                        <li>
+                            <span class="bold">As</span>: our, ours (exclusive of the listener's group);
+                        </li>
+                        <li>
+                            <span class="bold">Av</span>: your, yours (plural, here, close circle);
+                        </li>
+                        <li>
+                            <span class="bold">Ak</span>: their, theirs / your, yours (plural, distant, that group over there);
+                        </li>            
+                    </ul>
+                </section>
+                    
+                <p>
+                    For demonstrative pronouns, we have something interesting:
+                </p>
+
+                <section type="sub">
+                    <ul>
+                        <li>
+                            <span class="bold">Ai</span>: this, that;
+                        </li>
+                        <li>
+                            <span class="bold">Wa</span>: that over there;
+                        </li>
+                
+                    </ul>
+                </section>
+            
+                <p>
+                    It might seem quite confusing to think about the various "he/you" and "they/you" forms, but in reality it's
+                    extremely practical when you want to be specific. Have you ever said in a group "we're going to the movies"
+                    and left people confused about whether you meant just you and a friend or the whole group? That's where these variations help.
+                </p>
+                <p>
+                    <span class="italic">Ae</span> and <span class="italic">Ua</span> are the most generic. When in doubt,
+                    use these. They can be ambiguous in some situations, but they work. <span class="italic">Pe</span> and
+                    <span class="italic">Ka</span> are for distant selection, for a person or group out of reach,
+                    such as when talking about someone or a group far away who likely won't hear you.
+                    <span class="italic">Sa</span> can be seen when, for example, you as a soccer team representative
+                    speak to another team: "We are going to win", you say. Who were you referring to? Your team,
+                    obviously—and using <span class="italic">Sa</span> makes that explicit. <span class="italic">Va</span> is even cooler
+                    because you are explicitly referring to everyone within your reach (whether by voice, proximity, or presence),
+                    including yourself. "We will survive" means you believe everyone who can see or hear you
+                    will survive, including yourself.
+                </p>
+                <p>
+                    The words "this" and "that" (proximate) share the same word in this language, and for good reason.
+                    In most cases, people mix them up anyway and it makes no difference. With that in mind, both were mapped
+                    to the same word.
+                </p>
+                <p>
+                    <span class="italic">"PLOR"</span> and <span class="italic">"WALU"</span>, which meant "this/that" and "that over there",
+                    fell into disuse long ago. You might still find these words in older texts, but they are considered
+                    extremely obsolete.
+                </p>
+                <p>
+                    Other words can be found in the complete dictionary below. Words that have fallen into disuse or no longer
+                    follow the language standard will be highlighted in red at the end of the file and in search results.
+                </p>
             </div>
         </div>
-    </header>
-    <main>
-
-        <h1>WIP!!!! Sorry for that.</h1>
-        
-        <section id="mark-historia">
-            <a class="inline" href="#mark-historia"><h2 class="c-space">História</h2></a>
-        
-            <p class="c-space">
-                Esta língua foi criada por um usuário conhecido por Lohk em 2009.
-                Inicialmente ela era chamada de Lohkdesgds como seu nome, mas depois
-                foi alterada porque o nome acabou sendo usado como seu nick em jogos
-                e redes sociais e não vinculado à língua.
-            </p>
-            <p class="c-space">
-                No início o projeto era ter a ultimate língua que nenhum professor
-                poderia descobrir e que pudesse ser usada por alunos para conversar
-                entre cantos da sala. Se ela fosse original não haveria problema de
-                o professor pegar o bilhete, já que ele não entenderia nada.
-            </p>
-            <p class="c-space">
-                No mesmo ano as regras básicas para construção da língua foram definidas
-                e os primeiros testes aplicados. Infelizmente a receptividade foi
-                terrível e a língua caiu em desuso dias depois de ter sido criada.
-            </p>
-            <p class="c-space">
-                Hoje este arquivo lista as últimas alterações desde 2009. Os dados
-                aqui ainda permanecem atualizados, já que o Lohk ainda a usa de vez em 
-                quando, então provavelmente essa língua nunca vai morrer.
-            </p>
-            <p class="c-space">
-                A mensagem do Lohk para todos que lerem este arquivo é a seguinte: 
-                encontrou alguma palavra que desejaria usar que ainda não tem tradução? 
-                Envie uma mensagem no Discord (<span class="italic">@lohk</span>)
-                ou no Twitter (<span class="italic">@lohkdesgds</span>). Uma
-                update deve sair dentro de alguns dias, possivelmente.
-            </p>
-            <p class="c-space">
-                Se muita gente colaborar provavelmente um dia teremos uma língua mais
-                completa. Ela é flexível e atualmente só adaptada ou expandida pelo
-                Lohk mesmo. Quem sabe um dia não temos um número de pessoas suficiente
-                para fazer isso acontecer?
-            </p>
-        
-        </section>
-        
-        <hr class="gray"/>
-        
-        <section id="mark-escrita">
-            <a class="inline" href="#mark-escrita"><h2 class="c-space">Escrita</h2></a>
-        
-            <p class="c-space">
-                Há um grande interesse em uma forma oficial de se escrever neste idioma.
-                Para facilitar o uso, o padrão utilizado foi o do teclado americano,
-                contendo letras de A a Z, mas uma fonte válida também é a
-                <span class="italic">Avali Scratch</span> (você pode mudar a fonte
-                no topo da página).
-            </p>
-            <p class="c-space">
-                O formato da fonte <span class="italic">Avali Scratch</span> é bastante
-                interessante, pois é baseado em sua maioria em riscos, então talvez para
-                alguns seja até mais rápido e fácil escrever (além de parecer bem mais original).
-            </p>
-            <p class="c-space">
-                Compare as fontes no exemplo a seguir ou trocando no topo da página. As letras
-                com acento não são usadas no idioma naturalmente, mas caso queira usar a fonte
-                em português ou outro idioma, uma parte foi implementada por mim, como demonstrado
-                com os <span class="italic">À Á Â Ä Ã</span>.
-            </p>
-            
-            <section>
-                <p class="c-space">
-                    A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
-                </p>
-                <p class="c-space">
-                    0 1 2 3 4 5 6 7 8 9 . , ; : ~ " ' _ - = + | ( ) [ ] Ç À Á Â Ä Ã
-                </p>
-            </section>
-            <section class="f-avali">
-                <p class="c-space">
-                    A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
-                </p>
-                <p class="c-space">
-                    0 1 2 3 4 5 6 7 8 9 . , ; : ~ " ' _ - = + | ( ) [ ] Ç À Á Â Ä Ã
-                </p>
-            </section>
-            
-            <p class="c-space">
-                Por agora, esta é a fonte mais diferenciada e fácil encontrada para este propósito.
-                Talvez no futuro uma fonte original seja usada para este idioma. 
-            </p>
-        
-        </section>
-        
-        <hr class="gray"/>
-        
-        <section id="mark-regras_uso">
-            <a class="inline" href="#mark-regras_uso"><h2 class="c-space">Regras básicas de uso</h2></a>
-        
-            <p class="c-space">
-                Esta língua tem algumas regras simples e fáceis de decorar:
-            </p>
-            
-            <section>
-                <ul>
-                    <li dot="1.">
-                        Pronomes sempre têm duas letras;
-                    </li>            
-                    <li dot="2.">
-                        Verbos terão três letras para a base e 5 ou 7 para conjugados ou com modificador;
-                    </li>
-                    <li dot="3.">
-                        Palavras em geral têm 4 letras e podem ter 6 em alguns casos;
-                    </li>
-                    <li dot="4.">
-                        O "inverso" ou "contrário" de uma palavra, também visto em português com "des-"
-                        ou "a-", como em "desfazer", pode ser obtido literalmente colocando "inverso", ou 
-                        <italic>"mank"</italic>, antes da palavra. É uma forma simples
-                        de falar, mas pode não ser óbvio de primeira se não tiver o costume. Exemplo:
-                        <italic>"mank krk"</italic>": desatualizar ("contrário atualizar").
-                    </li>
-                    <li dot="5.">
-                        Tanto "?" quanto "wu" podem ser usados para destacar uma pergunta (wu deixa mais
-                        claro na hora de falar que se trata de uma pergunta).
-                        Exemplo: <span class="italic">"Wu ae tue fuil?"</span>;
-                    </li>
-                    <li dot="6.">
-                        Geralmente a ordem das palavras não importa, desde que os blocos de ideia
-                        (conjunto de verbos e palavras que fazem sentido entre si) estejam juntos.
-                        Exemplo: <span class="italic">"Ue tue fuil"</span> / 
-                        <span class="italic">"Fuil ue tue"</span> /
-                        <span class="italic">"Tue fuil ue"</span>.
-                        Entretanto, é preferível <span class="bold">SVO</span> (sujeito + verbo + objeto).
-                    </li>
-                </ul>
-            </section>
-        
-            <p class="c-space">
-                Para a pronúncia as regras também são simples:
-            </p>
-        
-            <section>
-                <ul>
-                    <li dot="1.">
-                        Em geral a leitura lembra uma mistura de português, inglês e alemão;
-                    </li>
-                    <li dot="2.">
-                        Y tem som de "ai" sempre;
-                    </li>
-                    <li dot="3.">
-                        Q sem vogal na frente ou no final tem um som semelhante a 
-                        <span class="italic">queue</span> ou <span class="italic">quack</span>
-                        (do inglês, na parte do "qu"). Quando tem vogal é como o "c" em "ca", "co" ...;
-                    </li>
-                    <li dot="4.">
-                        C sempre tem som igual ao Q sem vogal, ou seja, igual a 
-                        <span class="italic">queue</span> ou <span class="italic">quack</span>, na 
-                        parte do "qu", em inglês;
-                    </li>
-                    <li dot="5.">
-                        K sem vogal na frente ou no final de palavras se torna "cá". Em outras situações,
-                        é como o "c" em "ca", "co" ...;
-                    </li>
-                    <li dot="6.">
-                        H tende a prosseguir com a vogal anterior como se fosse numa falta de ar (ou, se
-                        não tiver vogal, aplica-se a regra geral de consoantes abaixo). Iniciando com H,
-                        ele tende a parecer um R, como em <span class="italic">"ruRal"</span>, suave;
-                    </li>
-                    <li dot="7.">
-                        W tende a ter som de "u" (quase vazio), não sendo um "u" forte, lembrando
-                        <span class="italic">WHat</span>, na parte do "wh", do inglês;
-                    </li>
-                    <li dot="8.">
-                        G tem som de "gê" sempre ("ga" vira como se fosse "já" do português);
-                    </li>
-                    <li dot="9.">
-                        J tem som de "guê" sempre ("ji" soa como "gui" em português);
-                    </li>
-                    <li dot="10.">
-                        X tem som sempre de "qs" parecido com Netfli<span class="italic">X</span>,
-                        no "x". Com vogais, soa como <span class="italic">"quss"</span>, como
-                        <span class="italic">"coçar"</span> sem as vogais.
-                    </li>
-                    <li dot="11.">
-                        Em geral consoantes sem vogais tendem a ter o som delas junto, próximo a
-                        um "ê" (tente colocar a língua nos dentes da frente em cima e fale "e"), e curto.
-                    </li>            
-                </ul>
-            </section>
-        
-            <p class="c-space">
-                Para a construção de palavras e verbos seguimos o seguinte formato:
-            </p>
-        
-            <section>
-                <ol>
-                    <li dot="1. ">
-                        <span class="bold">SEXO-PALAVRA-GRANDEZA</span>
-                        <ol class="c-tab">
-                            <li dot="a. ">
-                                Plural (opcional): <span class="bold">PALAVRA + PALAVRA</span> (repete a palavra).
-                            </li>
-                            <li dot="b. ">
-                                SEXOS (opcional):
-                                <ol class="c-tab">
-                                    <li dot="i. ">
-                                        <span class="bold">NI</span>: feminino;
-                                    </li>
-                                    <li dot="ii. ">
-                                        <span class="bold">NA</span>: masculino.
-                                    </li>
-                                </ol>   
-                            </li>
-                            <li dot="c. ">
-                                GRANDEZA (opcional, algumas vezes repetível para ênfase ou multiplicador):
-                                <ol class="c-tab">
-                                    <li dot="i. ">
-                                        <span class="bold">XI</span>: diminutivo;
-                                    </li>
-                                    <li dot="ii. ">
-                                        <span class="bold">XA</span>: aumentativo.
-                                    </li>
-                                </ol>   
-                            </li>
-                        </ol>
-                    </li>
-                    <li dot="2. ">
-                        <span class="bold">PRONOME - VERBO - (TEMPO</span> ou <span class="bold">MODIFICADOR) - GRANDEZA</span>
-                        <ol class="c-tab">
-                            <li dot="a. ">
-                                TEMPOS (opcional para o presente):
-                                <ol class="c-tab">
-                                    <li dot="i. ">
-                                        <span class="bold">PA</span>: passado;
-                                    </li>
-                                    <li dot="ii. ">
-                                        <span class="bold">FA</span>: futuro;
-                                    </li>
-                                    <li dot="iii. ">
-                                        <span class="bold">GA</span>: gerúndio.
-                                    </li>
-                                    <li dot="iv. ">
-                                        <span class="bold">LA</span>: particípio.
-                                    </li>
-                                </ol>   
-                            </li>
-                            <li dot="b. ">
-                                MODIFICADOR (opcional):
-                                <ol class="c-tab">
-                                    <li dot="i. ">
-                                        <span class="bold">KU</span>: substantivar.
-                                    </li>
-                                </ol>   
-                            </li>
-                            <li dot="c. ">
-                                GRANDEZA (opcional, algumas vezes repetível para ênfase ou multiplicador):
-                                <ol class="c-tab">
-                                    <li dot="i. ">
-                                        <span class="bold">XI</span>: diminutivo;
-                                    </li>
-                                    <li dot="ii. ">
-                                        <span class="bold">XA</span>: aumentativo.
-                                    </li>
-                                </ol>   
-                            </li>
-                        </ol>
-                    </li>
-                </ol>
-            </section>
-                
-            <p class="c-space">
-                <span class="bold">Sexo</span> em uma palavra é opcional, até porque nem todas as palavras
-                exigem isso. Você pode deixar em evidência o sexo por meio do contexto da frase. Em textos
-                antigos ainda podemos ver o "sentido" no final (duas letras), mas atualmente caiu em desuso
-                (<span class="italic">AW</span> para sentido oposto, <span class="italic">OP</span> para
-                duplo sentido oposto e <span class="italic">AP</span> para triplo sentido oposto).
-            </p>
-            <p class="c-space">
-                <span class="bold">Pronome</span> no verbo é basicamente o sujeito e 
-                <span class="bold">tempo</span> é o tempo do verbo. Ambos são opcionais e se assemelham muito
-                com o português.
-            </p>
-            <p class="c-space">
-                Todas as palavras podem ser "compactadas" se as letras forem as mesmas nos extremos, como em 
-                <span class="italic">"def'ury"</span> que é <span class="italic">"def fury"</span>.
-                A pronúncia deve ser a mesma de quando não era "compactado".
-            </p>
-            <p class="c-space">
-                <span class="bold">Verbos</span> podem ser substantivados diretamente sem problemas. Um verbo solto sem sentido em uma
-                frase como <span class="italic">"Ai tue ena"</span> significa
-                <span class="italic">"Isso é aplicável"</span> ao invés de <span class="italic">"aplicar"</span>
-                (que não faz sentido). <span class="bold">Entretanto</span>, para deixar mais claro,
-                <span class="bold">é recomendado</span> usar o modificador <span class="italic">"ku"</span>,
-                no caso <span class="italic">"Ai tue enaku"</span>. Sobre aumentativo e diminutivo, você pode adicionar no final
-                de uma palavra ou verbo <span class="italic">"xi"</span> ou <span class="italic">"xa"</span> como
-                por exemplo <span class="italic">"uyokuxa"</span> (amorzão).
-            </p>
-        
-        </section>
-        
-        <hr class="gray"/>
-        
-        <section id="mark-pronomes">
-            <a class="inline" href="#mark-pronomes"><h2 class="c-space">Pronomes</h2></a>
-        
-            <p class="c-space">
-                Pronomes pessoais são bem fáceis de usar. Tudo se resume ao que temos no português e uma palavra a mais:
-            </p>
-        
-            <section>
-                <ul>
-                    <li>
-                        <span class="bold">Ue</span>: eu;
-                    </li>
-                    <li>
-                        <span class="bold">Ae</span>: você (com quem estou falando, próximo, ao meu lado);
-                    </li>
-                    <li>
-                        <span class="bold">Pe</span>: ele/você (externo, ou chamando distante, longe);
-                    </li>
-                    <li>
-                        <span class="bold">Ua</span>: nós (todos os aplicáveis);
-                    </li>
-                    <li>
-                        <span class="bold">Sa</span>: nós (orador e sua turma ou grupo dirigindo-se a outro grupo não incluído);
-                    </li>
-                    <li>
-                        <span class="bold">Va</span>: vocês (próximos num raio pequeno, inclusivo);
-                    </li>
-                    <li>
-                        <span class="bold">Ka</span>: eles (externo ou distante);
-                    </li>            
-                </ul>
-            </section>
-                
-            <p class="c-space">
-                A parte legal chega agora: os pronomes possessivos (e outros) são basicamente os pronomes pessoais, só que ao contrário! Então fica fácil e intuitivo.
-            </p>
-
-            <section>
-                <ul>
-                    <li>
-                        <span class="bold">Eu</span>: meu, minha, me;
-                    </li>
-                    <li>
-                        <span class="bold">Ea</span>: seu, sua, se (singular, aqui, próximo);
-                    </li>
-                    <li>
-                        <span class="bold">Ep</span>: seu, sua, se (singular, distante, daquele longe);
-                    </li>
-                    <li>
-                        <span class="bold">Au</span>: nosso, nossa, nos (inclusivo a todos);
-                    </li>
-                    <li>
-                        <span class="bold">As</span>: nosso, nossa, nos (exclusivo do ouvidor e sua turma ou grupo);
-                    </li>
-                    <li>
-                        <span class="bold">Av</span>: seu, sua, se (plural, aqui, círculo próximo);
-                    </li>
-                    <li>
-                        <span class="bold">Ak</span>: seu, sua, se (plural, distante, aquele grupo lá);
-                    </li>            
-                </ul>
-            </section>
-                
-            <p class="c-space">
-                Para os pronomes demonstrativos temos algo engraçado:
-            </p>
-        
-            
-            <section>
-                <ul>
-                    <li>
-                        <span class="bold">Ai</span>: isso, isto;
-                    </li>
-                    <li>
-                        <span class="bold">Wa</span>: aquilo;
-                    </li>
-            
-                </ul>
-            </section>
-        
-            <p class="c-space">
-                É bastante confuso pensar nos diversos “ele/você” e “eles/vocês”, mas na verdade é extremamente prático nos
-                casos em que você quer ser específico. Nunca falou num grupo de pessoas que “nós vamos ao cinema” e ficar
-                confuso se você estava falando de você e seu amigo ou a turma toda? Nisso que essas variações ajudam.
-            </p>
-            <p class="c-space">
-                <span class="italic">Ae</span> e <span class="italic">Ua</span> são os mais genéricos. Se há dúvida,
-                use estes. Eles podem ser ambíguos em algumas situações, mas funcionam. <span class="italic">Pe</span> e
-                <span class="italic">Ka</span> são os casos de seleção distante, para uma pessoa ou grupo fora de alcance,
-                como quando você vai falar de alguém distante ou grupo distante que provavelmente não vai te ouvir.
-                <span class="italic">Sa</span> pode ser visto como por exemplo você, representante de um time de futebol,
-                vai falar com outro time. “Nós vamos ganhar”, você diz. Quem você se referiu? Seu time, óbvio, mas só será
-                mesmo se usar <span class="italic">Sa</span>. O <span class="italic">Va</span> é mais legal ainda,
-                porque você explicitamente está se referindo a todos dentro de seu alcance (seja voz, distância ou poder),
-                incluindo si mesmo. “Nós vamos sobreviver” significa que você acredita que todos que podem te ver ou ouvir
-                vão sobreviver, incluindo você mesmo.
-            </p>
-            <p class="c-space">
-                As palavras “isso” e “isto” são a mesma palavra nessa língua, mas não é à toa. Na maioria dos casos as
-                pessoas misturam as duas e nem faz diferença. Com isso em mente ambas foram traduzidas para a mesma palavra.
-            </p>
-            <p class="c-space">
-                Caiu em desuso há muito tempo <span class="italic">“PLOR”</span> e <span class="italic">“WALU”</span>,
-                que significavam “isso” e “aquilo”. Talvez ainda seja possível encontrar essas palavras em textos antigos,
-                mas é considerado extremamente obsoleto.
-            </p>
-            <p class="c-space">
-                Outras palavras podem ser encontradas no dicionário inteiro a seguir. As palavras que caíram em desuso ou
-                não seguem mais o padrão do idioma estarão em vermelho no final do arquivo e na pesquisa. 
-            </p>
-        
-        </section>
-    </main>
+    </section>
 
     <footer>
         <div class="b-flex b-col b-center">

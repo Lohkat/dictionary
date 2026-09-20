@@ -9,97 +9,75 @@
     <meta charset="utf-8">
     <meta http-equiv="content-language" content="pt-br">
     <meta name="author" content="Lohkdesgds Hangi Lhuminury">
-    <meta name="description" content="Lohk's">
+    <meta name="description" content="Lohk's Nest">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="icon" type="image/x-icon" href="images/favicon.png">
+    <link rel="icon" type="image/x-icon" href="/images/icons/dict.png">
     
     <title>Larinuim Dictionary</title>
 
-    <link rel="stylesheet" href="/deps/css/default.css">
-    <link rel="stylesheet" href="/deps/css/alignment.css">
-    <link rel="stylesheet" href="/deps/css/classes.css">
-
-    <link rel="stylesheet" href="css/dictionary.css">
+    <link rel="stylesheet" href="/deps/css/standard.css">
+    <script type="text/javascript" src="/deps/js/standard.js" defer></script>
     
     <script type="text/javascript" src="js/dict.js" defer></script>
     <script type="text/javascript" src="js/build.js" defer></script>
 </head>
 <body>
-    <header>
-        <div class="b-flex b-row b-between">
-            <h1 class="f-avali c-center_h c-clickable" onclick="reset_all()">Larinuim Dictionary!</h1>
-            <div class="c-center_h">
-                <button id="lang-chooser">🇧🇷 BR</button>
-            </div>
+    <button class="toggle-dark-mode" state="white"></button>
+    <button class="go-home"></button>
+    <button class="change-lang"
+        translate-br="🇧🇷"
+        translate-us="🇺🇸"
+    ></button>
+
+    <section class="ybottom xcenter" style="padding-bottom: 1rem; background-color: var(--bg2-color);">
+        <div type="center-header">
+            <br type="normal" />
+            <h1 class="f-avali highlight">Larinuim Dictionary</h1>
+            <h4>Larinuim Dictionary</h4>
+
+            <br type="large"/>
+
+            <input style="width: 65%;" placeholder="Search..." id="search-box"/>
         </div>
-    </header>
-
-    <main>
-        <input class="w100" placeholder="Search..." id="search-box"/>
-        <hr>
-        <section id="section-wotd-random">
-            <div class="b-flex b-gap">
-                <div class="c-flex c-noborder">
-                    <div class="b-flex b-col b-center">
-                        <h3 class="wotd-random-section-same-height" id="text-wotd">Word of the day</h3>
-                    </div>
-                    <div class="action-card" id="action-wotd">
-                        <span class="title" icon="░░">...</span>
-                        <div class="buttons">
-                            <button tag="translations">📗</button>
-                            <button tag="examples">📖</button>
-                            <button tag="old_translations">📕</button>
-                            <button tag="variations">🌟</button>
-                            <button tag="old_variations">⭐</button>
-                            <button tag="replaced_by">🔄</button>
-                        </div>
-                        <div class="detail">
-                        </div>
-                    </div>
+    </section>
+    
+    <section class="ybottom xcenter main">
+        <div type="block" id="section-wotd-random">
+            <div type="journal">
+                <div>
+                    <h5 class="title"
+                        translate-br="Palavra do dia"
+                        translate-us="Word of the day"
+                    ></h5>                    
                 </div>
-                <div class="c-flex c-noborder">
-                    <button class="wotd-random-section-same-height" id="text-get-random">Get random word</button>
-                    <div class="action-card" id="action-random" style="display: none;">
-                        <span class="title" icon="░░">Click the button!</span>
-                        <div class="buttons">
-                            <button tag="translations">📗</button>
-                            <button tag="examples">📖</button>
-                            <button tag="old_translations">📕</button>
-                            <button tag="variations">🌟</button>
-                            <button tag="old_variations">⭐</button>
-                            <button tag="replaced_by">🔄</button>
-                        </div>
-                        <div class="detail">
-                        </div>
-                    </div>
-                </div>
-                <button class="wotd-random-section-same-height" id="text-go-to-history">History of the language</button>
-            </div>
-        </section>
-        <section id="section-all-words">
-            <div class="b-flex b-col b-center">
-                <h3 id="text-all-words">All words in the dictionary:</h3>
-            </div>
-            <div id="all-results" class="b-flex b-gap">
 
-                <div class="action-card minimalist">
-                    <span class="title" icon="░░">Loading...</span>
-                    <div class="buttons">
-                        <button tag="translations">📗</button>
-                        <button tag="examples">📖</button>
-                        <button tag="old_translations">📕</button>
-                        <button tag="variations">🌟</button>
-                        <button tag="old_variations">⭐</button>
-                        <button tag="replaced_by">🔄</button>
-                    </div>
-                    <div class="detail">
-                        <span>Meanings</span>
-                    </div>
+                <div class="c-flex c-noborder">
+                    <button id="text-get-random"
+                        translate-br="Palavra do dia"
+                        translate-us="Get random word"
+                    ></button>
                 </div>
                 
-                <div class="action-card minimalist">
-                    <span class="title" icon="░░">Loading...</span>
+                <div type="card" id="action-wotd">
+                    <span class="title" icon="░░">...</span>
+                    <div class="buttons">
+                        <button tag="translations">📗</button>
+                        <button tag="examples">📖</button>
+                        <button tag="old_translations">📕</button>
+                        <button tag="variations">🌟</button>
+                        <button tag="old_variations">⭐</button>
+                        <button tag="replaced_by">🔄</button>
+                    </div>
+                    <blockquote class="detail">
+                    </blockquote>
+                </div>
+
+                <div class="action-card" id="action-random" style="display: none;">
+                    <span class="title" icon="░░"
+                        translate-br="Pressione o botão!"
+                        translate-us="Click the button!"
+                    ></span>
                     <div class="buttons">
                         <button tag="translations">📗</button>
                         <button tag="examples">📖</button>
@@ -109,29 +87,56 @@
                         <button tag="replaced_by">🔄</button>
                     </div>
                     <div class="detail">
-                        <span>Meanings</span>
                     </div>
                 </div>
             </div>
-        </section>
-        <section id="section-search" style="display: none;">
-            <div class="b-flex b-col b-center">
-                <h3 id="text-your-search">Search results:</h3>
-            </div>
-            <section>
-                <h4 id="text-modifiers-search">Possible analysis on the word:</h4>
-                <ul id="modifiers-results">
-                </ul>
-            </section>
-            <div id="scroll-results" class="b-flex b-gap">
-            </div>
-        </section>
-    </main>
 
-    <footer>
-        <div class="b-flex b-col b-center">
-            <span id="text-footer">Created by Lohk, 2026</span>
+            <br type="normal"/>
+
+            <button class="wotd-random-section-same-height" id="text-go-to-history"
+                translate-br="História do idioma"
+                translate-us="History of the language"
+            ></button>
         </div>
-    </footer>
+        
+        <div type="block" id="section-all-words">
+            <div class="b-flex b-col b-center">
+                <h3
+                    translate-br="Todas as palavras do dicionário:"
+                    translate-us="All words in the dictionary:"
+                ></h3>
+            </div>
+
+            <div id="all-results" type="journal">
+            </div>
+        </div>
+        <div type="block" id="section-search" style="display: none;">
+            <div class="b-flex b-col b-center">
+                <h3
+                    translate-br="Resultados da pesquisa:"
+                    translate-us="Search results:"
+                ></h3>
+            </div>
+
+            <h4
+                translate-br="Possível análise da palavra:"
+                translate-us="Possible analysis on the word:"
+            ></h4>
+
+            <ul id="modifiers-results">
+            </ul>
+
+            <div id="scroll-results" type="journal">
+            </div>
+        </div>
+    </section>
+
+    <section class="footer" >
+        <h6
+            translate-br="Criado por Lohk, 2026"
+            translate-us="Created by Lohk, 2026"
+        ></h6>
+    </section>
+
 </body>
 </html>
