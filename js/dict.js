@@ -3,7 +3,7 @@ const PRONOUN_BASE_LEN = 2;
 const VERB_BASE_LEN = 3;
 const WORD_BASE_LEN = 4;
 
-let lang_sel = "br";
+function getLangSel() { return localStorage.getItem("language") ?? "us"; }
 
 // Affixes are grammatical elements that change the meaning of a word.
 const affixes = {    
@@ -262,10 +262,11 @@ const dict = {
                 const root =  document.createElement("div");
                 const title = document.createElement("span");
                 const buttons = document.createElement("div");
-                const detail = document.createElement("div");
-                const obsolete = self.obsolete; //!(self.message?.[lang_sel]?.length > 0 && !self.obsolete);
+                const detail = document.createElement("blockquote");
+                const obsolete = self.obsolete; //!(self.message?.[getLangSel()]?.length > 0 && !self.obsolete);
 
-                root.classList.add("action-card");
+                //root.classList.add("action-card");
+                root.setAttribute("type", "card");
                 if (obsolete) root.classList.add("invalid");
                 else if (is_match !== true) root.classList.add("minimalist");
 
@@ -275,11 +276,11 @@ const dict = {
 
                 detail.classList.add("detail");
 
-                title.textContent = is_match ? `${k}` : `${k} - ${lang_sel === "br" ? "como" : "as"} '${title_search_append}'`;
+                title.textContent = is_match ? `${k}` : `${k} - ${getLangSel() === "br" ? "como" : "as"} '${title_search_append}'`;
 
                 for(let i = 0; i < 6; ++i) buttons.appendChild(document.createElement("button"));
 
-                switch(lang_sel) {
+                switch(getLangSel()) {
                 case "br":
                     buttons.children[0].setAttribute("title", "traduções");
                     buttons.children[1].setAttribute("title", "exemplos");
@@ -309,18 +310,18 @@ const dict = {
                 root.appendChild(buttons);
                 root.appendChild(detail);
 
-                const msgs      = self.message?.[lang_sel];
-                const msgs_old  = self.old_message?.[lang_sel];
-                const vars      = Object.keys(self.variants || {}).flatMap(function(vr){ return {key: vr, val: self.variants[vr].message?.[lang_sel]};});
-                const vars_old  = Object.keys(self.old_variants || {}).flatMap(function(vr){ return {key: vr, val: self.old_variants[vr].message?.[lang_sel]};});
-                const exs       = self.examples?.flatMap(function(vr){return {key: vr.phrase, val: vr.message?.[lang_sel]}; });
+                const msgs      = self.message?.[getLangSel()];
+                const msgs_old  = self.old_message?.[getLangSel()];
+                const vars      = Object.keys(self.variants || {}).flatMap(function(vr){ return {key: vr, val: self.variants[vr].message?.[getLangSel()]};});
+                const vars_old  = Object.keys(self.old_variants || {}).flatMap(function(vr){ return {key: vr, val: self.old_variants[vr].message?.[getLangSel()]};});
+                const exs       = self.examples?.flatMap(function(vr){return {key: vr.phrase, val: vr.message?.[getLangSel()]}; });
                 const repl      = self.replacements;
 
                 function simple_list_el(of) {
                     detail.innerHTML = "";
 
                     if (!of || of.length === 0) {
-                        detail.textContent = lang_sel === "br" ? "<nada>" : "<empty>";
+                        detail.textContent = getLangSel() === "br" ? "<nada>" : "<empty>";
                         return;
                     }
 
@@ -338,7 +339,7 @@ const dict = {
                     detail.innerHTML = "";
 
                     if (!of || of.length === 0) {
-                        detail.textContent = lang_sel === "br" ? "<nada>" : "<empty>";
+                        detail.textContent = getLangSel() === "br" ? "<nada>" : "<empty>";
                         return;
                     }
 
@@ -425,244 +426,6 @@ const dict = {
                 }, 10);
 
                 return root;
-
-
-
-
-
-                /*function create_list_of_array(arr, classes_base, id, show) {
-                    if (!arr || arr.length <= 0) return null;
-                    if (arr.length === 1 && arr[0].val == null) return null;
-                    
-                    const div = document.createElement("div");
-
-                    div.classList.add("lsw-dict-list-messages");
-                    if (classes_base) div.classList.add(...classes_base);
-                    if (id) div.setAttribute("id", id);
-
-                    if (show === false) div.classList.add("lsw-hide");
-                    
-                    arr.forEach(e => {
-                        if (e.key) {
-                            const sub_title = document.createElement("h3");
-
-                            sub_title.className = "lsw-bold lsw-inline lsw-dict-subtitle lsw-arrowed2";
-                            sub_title.innerText = `${e.key}:`;
-
-                            div.appendChild(sub_title);
-                        }
-
-                        e.val?.forEach((each, idx) => {
-                            const p = document.createElement("p");
-                            const span = document.createElement("span");
-    
-                            p.innerText = each;
-                            p.classList.add("lsw-low_indent");
-    
-                            span.innerText = `${idx + 1}. `;
-                            span.classList.add("lsw-bold");
-    
-                            p.prepend(span);
-                            div.appendChild(p);
-                        });
-                    });                    
-
-                    return div;
-                }
-                function create_button_enabler(resume, text, target_id_to_toggle_with, disabled, selected) {
-                    const el = document.createElement("button");
-                    
-                    el.classList.add("lsw-btn_default");
-                    el.classList.add("bar_selector");
-                    el.classList.add("lsw-dict-nogrow");
-
-                    if (disabled === true) el.classList.add("disabled");
-                    if (selected === true) el.classList.add("selected");
-
-                    el.setAttribute("text-delayed", text);
-                    el.setAttribute("text", resume);
-                    el.setAttribute("resumed-text", resume);
-                    el.setAttribute("id-target", target_id_to_toggle_with);
-
-                    function delayed_functionality(timeout_time) {
-                        // cancel current timeout
-                        const ev_id = el.getAttribute("ev-id");
-                        if (ev_id) clearTimeout(ev_id);
-                        el.removeAttribute("ev-id");
-
-                        el.setAttribute("ev-id", setTimeout(function() {
-                            const state = el.getAttribute("ev-state");
-
-                            switch(state) {
-                            case "enter":
-                                el.setAttribute("text", el.getAttribute("text-delayed"));
-                                break;
-                            case "exit":
-                                el.setAttribute("text", el.getAttribute("resumed-text"));
-                                break;
-                            }
-                            el.removeAttribute("ev-state");
-                        }, timeout_time));
-                    }
-
-                    el.addEventListener("mouseenter", function() {
-                        const state = el.getAttribute("ev-state");
-
-                        switch(state) {
-                        case "enter":
-                        case "exit":
-                            el.setAttribute("ev-state", "enter");
-                            break;
-                        default:
-                            el.setAttribute("ev-state", "enter");
-                            delayed_functionality(1000);
-                        }
-
-                    });
-                    el.addEventListener("mouseout", function() {
-                        const state = el.getAttribute("ev-state");
-
-                        switch(state) {
-                        case "enter":
-                        case "exit":
-                            el.setAttribute("ev-state", "exit");
-                            break;
-                        default:
-                            el.setAttribute("ev-state", "exit");
-                            delayed_functionality(2000);
-                        }
-                    });
-
-                    el.addEventListener("click", function(ev) {
-                        const src = ev.target;
-
-                        if (src.classList.contains("disabled")) return;
-
-                        el.removeAttribute("ev-state");
-                        delayed_functionality(10);
-
-                        const target_id = src.getAttribute("id-target");
-                        const target_el = document.getElementById(target_id);
-                        if (!target_el) {
-                            console.log(`Fatal error: element not found: ${target_id}`);
-                            return;
-                        }
-
-                        const other_buttons = src.parentElement.children;
-                        for (let i = 0; i < other_buttons.length; ++i) {
-                            other_buttons[i].classList.remove("selected");
-                        }
-                        const other_transl = target_el.parentElement.children;
-                        for (let i = 0; i < other_transl.length; ++i) {
-                            other_transl[i].classList.add("lsw-hide");
-                        }
-                        target_el.classList.remove("lsw-hide");
-
-                        src.classList.add("selected");
-
-                        __tst = src;
-                    });
-                    
-                    //el.innerText = "...";
-                    return el;
-                }
-
-                const not_obsolete = (self.message?.[lang_sel]?.length > 0 && !self.obsolete);
-
-                const base = document.createElement("div");                
-
-                // key: if different, defined
-                // val: meanings of key
-
-                const message_id        = `G-${k}-msg-${fancy_id_counter++}`;
-                const example_id        = `G-${k}-ex-${fancy_id_counter++}`;
-                const old_message_id    = `G-${k}-omsg-${fancy_id_counter++}`;
-                const variants_id       = `G-${k}-var-${fancy_id_counter++}`;
-                const old_variants_id   = `G-${k}-ovar-${fancy_id_counter++}`;
-                const replacements_id   = `G-${k}-repl-${fancy_id_counter++}`;
-
-                
-                const message = create_list_of_array(
-                    [{key: null, val: self.message?.[lang_sel]}],
-                    null,
-                    message_id,
-                    not_obsolete
-                );
-                const examples = create_list_of_array(
-                    self.examples?.flatMap(function(vr){return {key: vr.phrase, val: vr.message?.[lang_sel]}; }),
-                    null,
-                    example_id,
-                    false
-                );
-                const old_message = create_list_of_array(
-                    [{key: null, val: self.old_message?.[lang_sel]}],
-                    ["lsw-dict-obsolete"],
-                    old_message_id,
-                    false
-                );
-                const variants = create_list_of_array(
-                    Object.keys(self.variants || {}).flatMap(function(vr){ return {key: vr, val: self.variants[vr].message?.[lang_sel]};}),
-                    null,
-                    variants_id,
-                    false
-                );
-                const old_variants = create_list_of_array(
-                    Object.keys(self.old_variants || {}).flatMap(function(vr){ return {key: vr, val: self.old_variants[vr].message?.[lang_sel]};}),
-                    ["lsw-dict-obsolete"],
-                    old_variants_id,
-                    false
-                );
-                const replacements = create_list_of_array(
-                    [{key: null, val: self.replacements}],
-                    ["lsw-dict-replacement"],
-                    replacements_id,
-                    !not_obsolete
-                );
-
-                // === TITLE === //
-                const title_div = document.createElement("div");
-                const title_head = document.createElement("h2");
-
-                title_head.innerText = title_search_append && title_search_append !== k ? `${k} - encontrado como '${title_search_append}':` : `${k}:`;
-                title_head.classList.add("lsw-bold");
-                title_head.classList.add("lsw-title");
-                title_head.classList.add("lsw-inline");
-                title_head.classList.add("lsw-arrowed");
-                if (self.obsolete === true) {
-                    title_head.classList.add("lsw-dict-obsolete");
-                    title_head.setAttribute("title", "Obsoleto. Verifique por alternativas.");
-                }
-
-                title_div.classList.add("lsw-inline");
-                title_div.appendChild(title_head);
-
-                // === SELECTOR === //
-                const div_selector = document.createElement("div");
-                div_selector.style.gap = "0.1em";
-                div_selector.classList.add("lsw-autoflex-up8");
-
-                div_selector.appendChild(create_button_enabler("📗", "Traduções",            message_id,      message == null,          not_obsolete));
-                div_selector.appendChild(create_button_enabler("📖", "Exemplos",             example_id,      examples == null,         false));
-                div_selector.appendChild(create_button_enabler("📕", "Traduções obsoletas",  old_message_id,  old_message == null,      false));
-                div_selector.appendChild(create_button_enabler("🌟", "Variações",            variants_id,     self.variants == null,    false));
-                div_selector.appendChild(create_button_enabler("⭐", "Variações obsoletas",  old_variants_id, self.old_variants == null,false));
-                div_selector.appendChild(create_button_enabler("🔄", "Substituído por",      replacements_id, replacements == null,     !not_obsolete));
-                
-                // === MEANINGS === //
-                const desc_div = document.createElement("div");
-
-                if (message)                    desc_div.appendChild(message);
-                if (examples)                   desc_div.appendChild(examples);
-                if (old_message)                desc_div.appendChild(old_message);
-                if (self.variants != null)      desc_div.appendChild(variants);
-                if (self.old_variants != null)  desc_div.appendChild(old_variants);
-                if (replacements)               desc_div.appendChild(replacements);
-
-                base.appendChild(title_div);
-                base.appendChild(div_selector);
-                base.appendChild(desc_div);
-
-                return base;*/
             };
 
             // self check if it is built correctly. Returns string if error, null if nothing wrong
@@ -765,7 +528,7 @@ const dict = {
         else            console.log(`[INFO][DICT][SELF-TEST] Passed self test of word checking successfully.`);
     },
 
-    // This uses lang_sel to dig in a single language (for now, BR)
+    // This uses getLangSel() to dig in a single language (for now, BR)
     // Fun fact 2: this will not consider old_message (partially or totally obsolete)
     DeepSearchCollisions: function() {
         const brValues = {};
@@ -773,8 +536,8 @@ const dict = {
 
         for (const key in this.data) {
             const obj = this.data[key];
-            const brArray = obj.message?.[lang_sel] || [];
-            const variantBrArrays = Object.values(obj.variants || {}).flatMap(variant => variant.message?.[lang_sel] || []);
+            const brArray = obj.message?.[getLangSel()] || [];
+            const variantBrArrays = Object.values(obj.variants || {}).flatMap(variant => variant.message?.[getLangSel()] || []);
 
             const allBrValues = [...brArray, ...variantBrArrays];
 
@@ -945,14 +708,14 @@ const dict = {
         Object.keys(this.data).forEach(k => {
             const self = dict.data[k];
 
-            const self_messages = self.message?.[lang_sel]?.filter(msg => msg && msg?.indexOf(message) !== -1)?.flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: false }; }) || [];
-            const self_old_messages = self.old_message?.[lang_sel]?.filter(msg => msg && msg?.indexOf(message) !== -1)?.flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: true }; }) || [];
+            const self_messages = self.message?.[getLangSel()]?.filter(msg => msg && msg?.indexOf(message) !== -1)?.flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: false }; }) || [];
+            const self_old_messages = self.old_message?.[getLangSel()]?.filter(msg => msg && msg?.indexOf(message) !== -1)?.flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: true }; }) || [];
 
             const examples_phrases_match = self.examples?.filter(ex => ex.phrase.indexOf(message) !== -1)?.flatMap(function(ex){ return {key: ex.phrase, src: {[k]: self}, old_or_replacement: false }; }) || [];
-            const any_variant_match = Object.values(self.variants ?? {}).flatMap(e => e.message?.[lang_sel])?.filter(msg => msg && msg && msg?.indexOf(message) !== -1)?.flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: false }; }) || [];
+            const any_variant_match = Object.values(self.variants ?? {}).flatMap(e => e.message?.[getLangSel()])?.filter(msg => msg && msg && msg?.indexOf(message) !== -1)?.flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: false }; }) || [];
 
             const old_examples_phrases_match = self.old_examples?.filter(ex => ex.phrase.indexOf(message) !== -1)?.flatMap(function(ex){ return {key: ex.phrase, src: {[k]: self}, old_or_replacement: true }; }) || [];
-            const old_any_variant_match = Object.values(self.old_variants ?? {}).flatMap(e => e.message?.[lang_sel])?.filter(msg => msg && msg?.indexOf(message) !== -1)?.flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: true }; }) || [];
+            const old_any_variant_match = Object.values(self.old_variants ?? {}).flatMap(e => e.message?.[getLangSel()])?.filter(msg => msg && msg?.indexOf(message) !== -1)?.flatMap(function(msg){ return {key: msg, src: {[k]: self}, old_or_replacement: true }; }) || [];
 
             if (self_messages.length) found_raw.push(...self_messages);
             if (self_old_messages.length) found_raw.push(...self_old_messages);
